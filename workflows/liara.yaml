@@ -1,6 +1,6 @@
 name: CD-Liara
 on:
-  push:
+  merge_request:
     branches:
       - Develop
 jobs:
