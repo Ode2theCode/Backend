@@ -1,8 +1,10 @@
 name: CD-Liara
 on:
-  push:
+  pull_request:
     branches:
-      - Develop
+      - develop
+    types:
+      - closed
 jobs:
   deploy:
     runs-on: ubuntu-latest
