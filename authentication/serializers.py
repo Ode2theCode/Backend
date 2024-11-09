@@ -22,8 +22,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password']
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+        temp_user = TempUser.objects.create(**validated_data)
+        return temp_user
     
 
 class VerifyEmailSerializer(serializers.Serializer):
@@ -34,15 +34,9 @@ class VerifyEmailSerializer(serializers.Serializer):
         
         try:
             otp_obj = OneTimePassword.objects.get(otp=otp)
-            user = otp_obj.user
-            
-            if not user.is_verified:
-                user.is_verified = True
-                user.save()
-                return user
-            
-            else:
-                raise serializers.ValidationError('account already verified')
+            temp_user = otp_obj.temp_user
+            user = user.objects.create_user(username=temp_user.username, email=temp_user.email, password=temp_user.password)
+            return user
             
         except OneTimePassword.DoesNotExist:
             raise serializers.ValidationError('invalid one time password')

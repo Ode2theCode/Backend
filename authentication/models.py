@@ -30,8 +30,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             'access': str(refresh.access_token),
         }
     
+
+class TempUser(models.Model):
+    username = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255, unique=True)
+    password = models.CharField(max_length=255)
     
+
 class OneTimePassword(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    temp_user = models.ForeignKey(TempUser, on_delete=models.CASCADE)
     otp = models.CharField(max_length=6, unique=True)
     

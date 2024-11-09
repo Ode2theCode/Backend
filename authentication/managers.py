@@ -12,12 +12,6 @@ class UserManager(BaseUserManager):
             raise ValueError(_("You must provide a valid email address"))
 
     def create_user(self, username, email, password, **extra_fields):
-        if not username:
-            raise ValueError(_("The Username must be set"))
-        if not email:
-            raise ValueError(_("The Email must be set"))
-        if not password:
-            raise ValueError(_("The Password must be set"))
         
         email = self.normalize_email(email)
         self.validate_email(email)
