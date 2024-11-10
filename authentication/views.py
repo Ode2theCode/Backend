@@ -50,6 +50,7 @@ class LoginUserView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class PasswordResetRequestView(APIView):
     serializer_class = PasswordResetRequestSerializer
     def post(self, request):
@@ -59,7 +60,8 @@ class PasswordResetRequestView(APIView):
             return Response("password reset link has been sent to your email", status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+   
+ 
 class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
     def post(self, request, uidb64, token):

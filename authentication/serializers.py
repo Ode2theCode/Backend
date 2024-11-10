@@ -11,15 +11,51 @@ from django.core.validators import MaxLengthValidator
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import serializers
 
+import datetime
+
 from FD import settings
 from .models import *
+
+
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(min_length=8, max_length=64, write_only=True)
     
     class Meta:
-        model = User
+        model = TempUser
         fields = ['username', 'email', 'password']
+        
+    def validate(self, attrs):
+        temp_user_ttl = datetime.datetime.now() - datetime.timedelta(minutes=5)
+        username = attrs.get('username')
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        user_username = User.objects.filter(username=username).first()
+        user_email = User.objects.filter(email=email).first()
+        
+        temp_user_username = TempUser.objects.filter(username=username).first()
+        temp_user_email = TempUser.objects.filter(email=email).first()
+        
+        if user_username:
+            raise serializers.ValidationError('username already exists')
+        
+        if user_email:
+            raise serializers.ValidationError('email already exists')
+        
+        if temp_user_username and temp_user_username.created_at > temp_user_ttl:
+            raise serializers.ValidationError('user with this username already exists')
+        
+        if temp_user_email and temp_user_email.created_at > temp_user_ttl:
+            raise serializers.ValidationError('user with this email already exists')
+        
+        if temp_user_username and temp_user_username.created_at < temp_user_ttl:
+            temp_user_username.delete()
+        
+        if temp_user_email and temp_user_email.created_at < temp_user_ttl:
+            temp_user_email.delete()
+        
+        return attrs
 
     def create(self, validated_data):
         temp_user = TempUser.objects.create(**validated_data)
@@ -35,7 +71,8 @@ class VerifyEmailSerializer(serializers.Serializer):
         try:
             otp_obj = OneTimePassword.objects.get(otp=otp)
             temp_user = otp_obj.temp_user
-            user = user.objects.create_user(username=temp_user.username, email=temp_user.email, password=temp_user.password)
+            user = User.objects.create_user(username=temp_user.username, email=temp_user.email, password=temp_user.password)
+            temp_user.delete()
             return user
             
         except OneTimePassword.DoesNotExist:
@@ -60,13 +97,14 @@ class UserLoginSerializer(serializers.ModelSerializer):
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
-            raise AuthenticationFailed('Invalid credentials, try again')
-        
-        if not user.is_verified:
-            raise AuthenticationFailed('Email not verified')
+            temp_user = TempUser.objects.filter(username=username).exists()
+            if temp_user:
+                raise AuthenticationFailed('please verify your email')
+            else:
+                raise AuthenticationFailed('wrong password')
         
         if not user.check_password(password):
-            raise AuthenticationFailed('Invalid credentials, try again')
+            raise AuthenticationFailed('Invalid password, try again')
         
         tokens = user.tokens()
         

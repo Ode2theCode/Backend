@@ -10,7 +10,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255, verbose_name=_('Password'))
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
@@ -35,6 +34,7 @@ class TempUser(models.Model):
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
+    date_joined = models.DateTimeField(auto_now_add=True)
     
 
 class OneTimePassword(models.Model):
