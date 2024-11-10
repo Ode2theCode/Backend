@@ -1,4 +1,3 @@
-from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, smart_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -6,6 +5,8 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.core.mail import EmailMessage
 from django.core.validators import MaxLengthValidator
+from django.utils import timezone
+
 
 
 from rest_framework.exceptions import AuthenticationFailed
@@ -23,10 +24,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = TempUser
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email', 'password', 'date_joined']
         
     def validate(self, attrs):
-        temp_user_ttl = datetime.datetime.now() - datetime.timedelta(minutes=5)
+        temp_user_ttl = timezone.now() - datetime.timedelta(minutes=1)
+        
         username = attrs.get('username')
         email = attrs.get('email')
         password = attrs.get('password')
@@ -35,7 +37,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user_email = User.objects.filter(email=email).first()
         
         temp_user_username = TempUser.objects.filter(username=username).first()
+        print(temp_user_username)
         temp_user_email = TempUser.objects.filter(email=email).first()
+        
+        if temp_user_username:
+            print(timezone.now() -temp_user_username.date_joined)
         
         if user_username:
             raise serializers.ValidationError('username already exists')
@@ -43,16 +49,16 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if user_email:
             raise serializers.ValidationError('email already exists')
         
-        if temp_user_username and temp_user_username.created_at > temp_user_ttl:
-            raise serializers.ValidationError('user with this username already exists')
+        if temp_user_username and temp_user_username.date_joined > temp_user_ttl:
+            raise serializers.ValidationError('username already exists')
         
-        if temp_user_email and temp_user_email.created_at > temp_user_ttl:
-            raise serializers.ValidationError('user with this email already exists')
+        if temp_user_email and temp_user_email.date_joined > temp_user_ttl:
+            raise serializers.ValidationError('email already exists')
         
-        if temp_user_username and temp_user_username.created_at < temp_user_ttl:
+        if temp_user_username and temp_user_username.date_joined < temp_user_ttl:
             temp_user_username.delete()
         
-        if temp_user_email and temp_user_email.created_at < temp_user_ttl:
+        if temp_user_email and temp_user_email.date_joined < temp_user_ttl:
             temp_user_email.delete()
         
         return attrs
