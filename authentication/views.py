@@ -12,24 +12,24 @@ class RegisterUserView(APIView):
     serializer_class = UserCreateSerializer
     
     def post(self, request):
-        serializer = UserCreateSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-            user = serializer.data
-            send_otp_email(user['email'])
+            temp_user = serializer.data
+            send_otp_email(temp_user['email'])
             return Response({
-                'data': user,
+                'data': temp_user,
                 'message': 'User created successfully\n Please check your email for One Time Password',
             }, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
-class VerifyEmailView(APIView):    
+class VerifyEmailView(APIView):
     serializer_class = VerifyEmailSerializer
     
     def post(self, request):
-        serializer = VerifyEmailSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid(raise_exception=True):
             return Response({
@@ -50,6 +50,7 @@ class LoginUserView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class PasswordResetRequestView(APIView):
     serializer_class = PasswordResetRequestSerializer
     def post(self, request):
@@ -59,7 +60,8 @@ class PasswordResetRequestView(APIView):
             return Response("password reset link has been sent to your email", status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+   
+ 
 class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
     def post(self, request, uidb64, token):

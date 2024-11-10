@@ -1,19 +1,26 @@
-from django.core.mail import EmailMessage
+from email.message import EmailMessage
+import smtplib
 import secrets
-from .models import OneTimePassword, User
+from .models import *
 from django.conf import settings
 
 def send_otp_email(email):
     from_email = settings.EMAIL_HOST_USER
-    
+    password = settings.EMAIL_HOST_PASSWORD
     otp = secrets.randbelow(10**6)
     otp = str(otp).zfill(6)
     
-    user = User.objects.get(email=email)
-    OneTimePassword.objects.create(user=user, otp=otp)
+    temp_user = TempUser.objects.get(email=email)
+    OneTimePassword.objects.create(temp_user=temp_user, otp=otp)
     
-    email_subject = 'One Time Password'
-    email_body = f'Thanks for registering on freediscussion.ir.\nYour One Time Password is {otp}' 
+    subject = 'One Time Password'
+    body = f'Thanks for registering on freediscussion.ir.\nYour One Time Password is {otp}' 
     
-    confirmation_email = EmailMessage(subject=email_subject, body=email_body, from_email=from_email, to=[email])
-    confirmation_email.send()
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = from_email
+    msg['To'] = email
+    msg.set_content(body)
+    with smtplib.SMTP_SSL('smtp.gmail.com',465) as server:
+        server.login(from_email, password)
+        server.send_message(msg)
