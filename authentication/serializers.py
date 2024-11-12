@@ -185,4 +185,11 @@ class UserRetriveSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'level', 'date_joined', 'city', 'neighborhood']
+        
+
+class UserDeleteSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(min_length=8, max_length=64, write_only=True)
+    class Meta:
+        model = User
+        fields = ['password']
     
