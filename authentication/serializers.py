@@ -120,6 +120,11 @@ class UserLoginSerializer(serializers.ModelSerializer):
             'access_token': str(tokens['access']),
             'refresh_token': str(tokens['refresh']),
         }
+    
+    
+class UserLogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+     
         
 class PasswordResetRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
@@ -174,3 +179,4 @@ class PasswordResetConfirmSerializer(serializers.ModelSerializer):
         user.save()
         
         return user
+    
