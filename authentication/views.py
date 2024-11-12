@@ -87,3 +87,11 @@ class LogoutUserView(APIView):
             return Response("logout successfully", status=status.HTTP_200_OK)
         except:
             return Response("invalid token", status=status.HTTP_400_BAD_REQUEST)
+        
+class UserRetriveView(APIView):
+    serializer_class= UserRetriveSerializer
+    
+    def get(self, request, username):
+        user = User.objects.get(username=username)
+        serializer = self.serializer_class(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

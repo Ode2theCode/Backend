@@ -180,3 +180,9 @@ class PasswordResetConfirmSerializer(serializers.ModelSerializer):
         
         return user
     
+
+class UserRetriveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'level', 'date_joined', 'city', 'neighborhood']
+    
