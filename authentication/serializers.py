@@ -192,4 +192,17 @@ class UserDeleteSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['password']
+        
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['level', 'city', 'neighborhood']
+        
+        def update(self, instance, validated_data):
+            for key, value in validated_data.items():
+                if value is not None:
+                    setattr(instance, key, value)
+            instance.save()
+            return self.instance
     
