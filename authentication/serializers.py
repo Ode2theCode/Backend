@@ -120,6 +120,11 @@ class UserLoginSerializer(serializers.ModelSerializer):
             'access_token': str(tokens['access']),
             'refresh_token': str(tokens['refresh']),
         }
+    
+    
+class UserLogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+     
         
 class PasswordResetRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
@@ -174,3 +179,30 @@ class PasswordResetConfirmSerializer(serializers.ModelSerializer):
         user.save()
         
         return user
+    
+
+class UserRetriveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'level', 'date_joined', 'city', 'neighborhood']
+        
+
+class UserDeleteSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(min_length=8, max_length=64, write_only=True)
+    class Meta:
+        model = User
+        fields = ['password']
+        
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['level', 'city', 'neighborhood']
+        
+        def update(self, instance, validated_data):
+            for key, value in validated_data.items():
+                if value is not None:
+                    setattr(instance, key, value)
+            instance.save()
+            return self.instance
+    

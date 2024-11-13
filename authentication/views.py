@@ -71,3 +71,67 @@ class PasswordResetConfirmView(APIView):
             return Response("password reset successfully", status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class LogoutUserView(APIView):
+    serializer_class = UserLogoutSerializer
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        refresh_token = serializer.validated_data.get('refresh_token')
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response("logout successfully", status=status.HTTP_200_OK)
+        except:
+            return Response("invalid token", status=status.HTTP_400_BAD_REQUEST)
+        
+class UserRetriveView(APIView):
+    serializer_class= UserRetriveSerializer
+    
+    def get(self, request, *args, **kwargs):
+        username = kwargs.get('username')
+        user = User.objects.get(username=username)
+        serializer = self.serializer_class(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class UserDeleteView(APIView):
+    serializer_class= UserDeleteSerializer
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            username = kwargs.get('username')
+            user = User.objects.get(username=username)
+            serializer = self.serializer_class(data = request.data)
+            
+            serializer.is_valid(raise_exception=True)
+            
+            if user.check_password(serializer.validated_data.get('password')):
+                return Response("invalid password", status=status.HTTP_400_BAD_REQUEST)
+            
+            user.delete()
+            return Response("user deleted successfully", status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response("user not found", status=status.HTTP_404_NOT_FOUND)
+        
+
+class UserUpdateView(APIView):
+    serializer_class= UserUpdateSerializer
+    
+    def put(self, request, *args, **kwargs):
+        try:
+            username = kwargs.get('username')
+            user = User.objects.get(username=username)
+            serializer = self.serializer_class(user, data = request.data, partial=True)
+        
+            if serializer.is_valid():
+                serializer.update(user, serializer.validated_data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except User.DoesNotExist:
+            return Response("user not found", status=status.HTTP_404_NOT_FOUND)

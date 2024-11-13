@@ -13,6 +13,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
+    level = models.CharField(max_length=2, default='a1')
+    city = models.CharField(max_length=255, blank=True, null=True)
+    neighborhood = models.CharField(max_length=255, blank=True, null=True)
     
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'password']
