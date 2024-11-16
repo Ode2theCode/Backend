@@ -77,3 +77,13 @@ class GroupUpdateSerializer(serializers.ModelSerializer):
         instance.private = validated_data.get('private', instance.private)
         instance.save()
         return instance
+    
+
+class GroupPendingRequestSerializer(serializers.ModelSerializer):
+    pending_members = serializers.SerializerMethodField( read_only=True)
+    class Meta:
+        model = Group
+        fields = ['pending_members']
+        
+    def get_pending_members(self, obj):
+        return [member.username for member in obj.pending_members.all()]

@@ -1,12 +1,16 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import *
 from .models import *
+from .permissions import *
 
 
 class GroupCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     serializer_class = GroupCreateSerializer
     
     def post(self, request):
@@ -31,6 +35,8 @@ class GroupRetrieveView(APIView):
 
 
 class GroupUpdateView(APIView):
+    permission_classes = [IsAuthenticated, IsGroupOwner]
+    
     serializer_class = GroupUpdateSerializer
     
     def patch(self, request, *args, **kwargs):
@@ -50,7 +56,8 @@ class GroupUpdateView(APIView):
             return Response("group not found", status=status.HTTP_404_NOT_FOUND)
 
 
-class GroupDeleteView(APIView):    
+class GroupDeleteView(APIView):  
+    permission_classes = [IsAuthenticated, IsGroupOwner]  
     def delete(self, request, *args, **kwargs):
         if Group.objects.filter(title=kwargs.get('title')).exists():
             if request.user.owned_groups.filter(title=kwargs.get('title')).exists():
@@ -64,6 +71,7 @@ class GroupDeleteView(APIView):
         
 
 class GroupJoinRequestView(APIView):
+    permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
         if Group.objects.filter(title=kwargs.get('title')).exists():
@@ -80,3 +88,46 @@ class GroupJoinRequestView(APIView):
                 group.add_member(request.user)
                 return Response("you are now a member of this group", status=status.HTTP_200_OK)
             
+class GroupPendingRequestView(APIView):
+    permission_classes = [IsAuthenticated, IsGroupOwner]
+    
+    def get(self, request, *args, **kwargs):
+        if Group.objects.filter(title=kwargs.get('title')).exists():
+            group = Group.objects.get(title=kwargs.get('title'))
+            serializer = GroupPendingRequestSerializer(group.pending_members.all(), many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+
+class GroupAcceptRequestView(APIView):
+    permission_classes = [IsAuthenticated, IsGroupOwner]
+    
+    def post(self, request, *args, **kwargs):
+        if Group.objects.filter(title=kwargs.get('title')).exists():
+            group = Group.objects.get(title=kwargs.get('title'))
+            group.accept_pending_member(request.user)
+            return Response("request accepted successfully", status=status.HTTP_200_OK)
+        else:
+            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        
+class GroupDeclineRequestView(APIView):
+    permission_classes = [IsAuthenticated, IsGroupOwner]
+    
+    def post(self, request, *args, **kwargs):
+        if Group.objects.filter(title=kwargs.get('title')).exists():
+            group = Group.objects.get(title=kwargs.get('title'))
+            group.remove_pending_member(request.user)
+            return Response("request declined successfully", status=status.HTTP_200_OK)
+        else:
+            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        
+
+class GroupLeaveView(APIView):
+    permission_classes = [IsAuthenticated, IsGroupMember]
+    def post(self, request, *args, **kwargs):
+        if Group.objects.filter(title=kwargs.get('title')).exists():
+            group = Group.objects.get(title=kwargs.get('title'))
+            group.remove_member(request.user)
+            return Response("you left the group successfully", status=status.HTTP_200_OK)
+        else:
+            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
