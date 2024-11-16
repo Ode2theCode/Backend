@@ -14,6 +14,10 @@ class Group(models.Model):
     owner = models.ForeignKey('authentication.User', on_delete=models.CASCADE, related_name='owned_groups')
     members = models.ManyToManyField('authentication.User', related_name='joined_groups')
     
+    pending_members = models.ManyToManyField('authentication.User', related_name='pending_groups')
+    
+    def add_pending_member(self, user):
+        self.pending_members.add(user)
     
     def add_member(self, user):
         self.members.add(user)

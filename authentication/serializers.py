@@ -204,5 +204,5 @@ class UserUpdateSerializer(serializers.ModelSerializer):
                 if value is not None:
                     setattr(instance, key, value)
             instance.save()
-            return self.instance
+            return validated_data
     

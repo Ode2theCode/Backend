@@ -7,5 +7,5 @@ urlpatterns = [
     path('<str:title>/delete/', GroupDeleteView.as_view()),
     path('<str:title>/update/', GroupUpdateView.as_view()),
     
-    # path('<str:title>/join/', GroupMembershipView.as_view()),
+    path('<str:title>/join/', GroupJoinRequestView.as_view()),
 ]

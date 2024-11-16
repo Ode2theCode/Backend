@@ -120,7 +120,7 @@ class UserDeleteView(APIView):
 class UserUpdateView(APIView):
     serializer_class= UserUpdateSerializer
     
-    def put(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         try:
             username = kwargs.get('username')
             user = User.objects.get(username=username)

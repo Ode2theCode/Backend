@@ -61,3 +61,22 @@ class GroupDeleteView(APIView):
                 return Response("you are not the owner of this group", status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        
+
+class GroupJoinRequestView(APIView):
+    
+    def post(self, request, *args, **kwargs):
+        if Group.objects.filter(title=kwargs.get('title')).exists():
+            group = Group.objects.get(title=kwargs.get('title'))
+            if group.max_members < group.members.count():
+                return Response("group is full", status=status.HTTP_400_BAD_REQUEST)
+            if group.level != request.user.level:
+                return Response(f"your level is not compatible with this group your level is {request.user.level} and group level is {group.level}", status=status.HTTP_400_BAD_REQUEST)
+            
+            if group.private:
+                group.add_pending_member(request.user)
+                return Response("join request sent successfully", status=status.HTTP_200_OK)
+            else:
+                group.add_member(request.user)
+                return Response("you are now a member of this group", status=status.HTTP_200_OK)
+            
