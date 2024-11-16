@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     
     'authentication',
     'groups',
+    'home',
 ]
 
 MIDDLEWARE = [
