@@ -80,10 +80,42 @@ class GroupUpdateSerializer(serializers.ModelSerializer):
     
 
 class GroupPendingRequestSerializer(serializers.ModelSerializer):
-    pending_members = serializers.SerializerMethodField( read_only=True)
+    pending_members = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Group
         fields = ['pending_members']
         
     def get_pending_members(self, obj):
         return [member.username for member in obj.pending_members.all()]
+    
+class GroupAcceptRequestSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    
+    def validate(self, data):
+        pending_usernames = [member.username for member in self.instance.pending_members.all()]
+        if data['username'] not in pending_usernames:
+            print(data['username'])
+            print(pending_usernames)
+            raise serializers.ValidationError('user not in pending members')
+        return data
+    
+
+class GroupDeclineRequestSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    
+    def validate(self, data):
+        pending_usernames = [member.username for member in self.instance.pending_members.all()]
+        if data['username'] not in pending_usernames:
+            raise serializers.ValidationError('user not in pending members')
+        return data
+
+
+class GroupKickSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    
+    def validate(self, data):
+        usernames = [member.username for member in self.instance.members.all()]
+        if data['username'] not in usernames:
+            raise serializers.ValidationError('user not in members')
+        return data
+        
