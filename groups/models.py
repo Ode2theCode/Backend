@@ -1,7 +1,4 @@
 from django.db import models
-from django.contrib.contenttypes.fields import GenericRelation
-
-from home.models import TimeSlot
 
 class Group(models.Model):
     title = models.CharField(max_length=255)
@@ -18,7 +15,6 @@ class Group(models.Model):
     members = models.ManyToManyField('authentication.User', related_name='joined_groups')
     pending_members = models.ManyToManyField('authentication.User', related_name='pending_groups')
     
-    time_slots = GenericRelation(TimeSlot)
     
     def add_pending_member(self, user):
         self.pending_members.add(user)
