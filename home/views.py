@@ -5,6 +5,8 @@ from rest_framework.response import Response
 
 from .serializers import *
 from .services import *
+from groups.models import*
+from .permissions import *
 
 class HomeView(APIView):
     serializer_class = HomeSerializer
@@ -51,3 +53,40 @@ class TimeSlotDeleteView(APIView):
         TimeSlotService.delete_time_slot(request.user, kwargs.get('id'))
         return Response("time slot deleted successfully", status=status.HTTP_200_OK)
 
+
+
+class GroupTimeSlotCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsGroupOwner]
+    
+    serializer_class = TimeSlotSerializer
+    
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)     
+        serializer.is_valid(raise_exception=True)
+        try:
+            time_slot = TimeSlotService.create_group_time_slot(
+                group=Group.objects.get(title=kwargs.get('title')),
+                **serializer.validated_data
+            )
+            return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+class GroupTimeSlotListView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    serializer_class = TimeSlotSerializer
+    
+    def get(self, request):
+        time_slots = TimeSlotService.get_group_time_slots(request.user)
+        serializer = self.serializer_class(time_slots, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class GroupTimeSlotDeleteView(APIView):
+    permission_classes = [IsAuthenticated, IsGroupOwner]
+    
+    def delete(self, request, *args, **kwargs):
+        TimeSlotService.delete_group_time_slot(request.user, kwargs.get('id'))
+        return Response("time slot deleted successfully", status=status.HTTP_200_OK)

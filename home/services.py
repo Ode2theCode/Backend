@@ -2,7 +2,7 @@ from django.db.models import QuerySet
 
 from rest_framework.exceptions import ValidationError
 
-from .models import TimeSlot
+from .models import *
 
 class TimeSlotService:
     @staticmethod
@@ -41,8 +41,26 @@ class TimeSlotService:
 
         return time_slot
     
+    @classmethod
+    def create_group_time_slot(cls, group, day_of_week: str, start_time: float, end_time: float) -> TimeSlot:
+        
+        cls.validate_time_range(start_time, end_time)
+        cls.validate_overlap(group, day_of_week, start_time, end_time)
+        
+        time_slot = GroupTimeSlot.objects.create(
+            group=group,
+            day_of_week=day_of_week.lower(),
+            start_time=start_time,
+            end_time=end_time
+        )
+
+        return time_slot
+    
     def get_user_time_slots(user) -> QuerySet[TimeSlot]:
         return TimeSlot.objects.filter(user=user)
+    
+    def get_group_time_slots(group) -> QuerySet[TimeSlot]:
+        return GroupTimeSlot.objects.filter(group=group)
 
     @staticmethod
     def delete_time_slot(user, time_slot_id: int) -> None:
