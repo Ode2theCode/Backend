@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .serializers import *
+from .services import *
 
 class HomeView(APIView):
     serializer_class = HomeSerializer
@@ -15,39 +16,38 @@ class HomeView(APIView):
         else:
             return Response("landing page", status=status.HTTP_200_OK)
         
-class TimeSlotCreate(APIView):
+class TimeSlotCreateView(APIView):
     permission_classes = [IsAuthenticated]
     
-    serializer_class = TimeSlotCreateSerializer
+    serializer_class = TimeSlotSerializer
     
     def post(self, request):
-        serializer = self.serializer_class(data=request.data, context={'user': request.user})
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.serializer_class(data=request.data)     
+        serializer.is_valid(raise_exception=True)
+        try:
+            time_slot = TimeSlotService.create_time_slot(
+                user=request.user,
+                **serializer.validated_data
+            )
+            return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         
-
 class TimeSlotListView(APIView):
     permission_classes = [IsAuthenticated]
     
-    serializer_class = TimeSlotListSerializer
+    serializer_class = TimeSlotSerializer
     
     def get(self, request):
-        serializer = self.serializer_class(request.user.timeslots.all(), many=True)
+        time_slots = TimeSlotService.get_user_time_slots(request.user)
+        serializer = self.serializer_class(time_slots, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 class TimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated]
     
-    serializer_class = TimeSlotDeleteSerializer
-    
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data, context={'user': request.user})
-        if serializer.is_valid(raise_exception=True):
-            serializer.delete()
-            return Response("time slot deleted successfully", status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, *args, **kwargs):
+        TimeSlotService.delete_time_slot(request.user, kwargs.get('id'))
+        return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+
