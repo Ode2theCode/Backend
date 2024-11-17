@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from authentication.models import User
+
 from .models import *
+from authentication.models import User
+from groups.models import Group
 
 class HomeSerializer(serializers.Serializer):
     joined_groups = serializers.SerializerMethodField()
@@ -24,6 +26,11 @@ class TimeSlotSerializer(serializers.ModelSerializer):
         model = TimeSlot
         fields = ['id', 'day_of_week', 'start_time', 'end_time']
         read_only_fields = ['id']
+        
+class SuggestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'max_members', 'meeting_url', 'private']
         
 
         

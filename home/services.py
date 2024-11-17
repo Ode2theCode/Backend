@@ -3,6 +3,7 @@ from django.db.models import QuerySet
 from rest_framework.exceptions import ValidationError
 
 from .models import *
+from groups.models import *
 
 class TimeSlotService:
     @staticmethod
@@ -73,3 +74,31 @@ class TimeSlotService:
             raise ValidationError('Time slot not found')
             
         time_slot.delete()
+        
+class SuggestionService:
+    
+    def get_suggestions(user) -> list[Group]:
+        user_time_slots = TimeSlotService.get_user_time_slots(user)
+        groups = Group.objects.exclude(members=user)
+        group_matches = []
+        
+        for group in groups:
+            group_time_slots = TimeSlotService.get_group_time_slots(group)
+            total_overlap = 0
+
+            for user_slot in user_time_slots:
+                for group_slot in group_time_slots:
+                    if user_slot.day_of_week == group_slot.day_of_week:
+                        overlap = min(user_slot.end_time, group_slot.end_time) - max(user_slot.start_time, group_slot.start_time)
+                        if overlap > 0:
+                            total_overlap += overlap
+
+            if total_overlap > 0:
+                group_matches.append((group, total_overlap))
+                
+        group_matches.sort(key=lambda x: x[1], reverse=True)
+        
+        return group_matches
+        
+        
+                

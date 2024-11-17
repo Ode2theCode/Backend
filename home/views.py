@@ -90,3 +90,14 @@ class GroupTimeSlotDeleteView(APIView):
     def delete(self, request, *args, **kwargs):
         TimeSlotService.delete_group_time_slot(request.user, kwargs.get('id'))
         return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+    
+    
+class SuggestionsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    serializer_class = SuggestionSerializer
+    
+    def get(self, requst):
+        suggestions = SuggestionService.get_suggestions(requst.user)
+        serializer = self.serializer_class(suggestions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
