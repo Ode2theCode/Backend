@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
+
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from .managers import UserManager
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -10,13 +12,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=255, verbose_name=_('Password'))
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
-    level = models.CharField(max_length=2, default='a1')
+    level = models.CharField(max_length=2, default='A1')
     city = models.CharField(max_length=255, blank=True, null=True)
     neighborhood = models.CharField(max_length=255, blank=True, null=True)
-    
+        
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'password']
 
