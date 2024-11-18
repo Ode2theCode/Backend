@@ -101,3 +101,18 @@ class SuggestionsView(APIView):
         suggestions = SuggestionService.get_suggestions(requst.user)
         serializer = self.serializer_class(suggestions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    
+   
+    
+from django.db import connection
+from django.http import JsonResponse
+
+def get_table_data(request):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM neighborhood")
+        columns = [col[0] for col in cursor.description]
+        rows = cursor.fetchall()
+        
+    data = [dict(zip(columns, row)) for row in rows]
+    return JsonResponse(data, safe=False)

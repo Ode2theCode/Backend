@@ -184,7 +184,7 @@ class PasswordResetConfirmSerializer(serializers.ModelSerializer):
 class UserRetriveSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'level', 'date_joined', 'city', 'neighborhood']
+        fields = ['username', 'email', 'level', 'date_joined', 'city', 'neighborhood', 'profile_image']
         
 
 class UserDeleteSerializer(serializers.ModelSerializer):
@@ -197,12 +197,13 @@ class UserDeleteSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['level', 'city', 'neighborhood']
+        fields = ['level', 'city', 'neighborhood', 'profile_image']
         
         def update(self, instance, validated_data):
-            for key, value in validated_data.items():
-                if value is not None:
-                    setattr(instance, key, value)
+            instance.level = validated_data.get('level', instance.level)
+            instance.city = validated_data.get('city', instance.city)
+            instance.neighborhood = validated_data.get('neighborhood', instance.neighborhood)
+            profile_image = validated_data.get('profile_image', instance.profile_image)
             instance.save()
-            return validated_data
+            return instance
     

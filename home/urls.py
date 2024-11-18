@@ -12,4 +12,6 @@ urlpatterns = [
     path('group-time-slot/create/', GroupTimeSlotCreateView.as_view()),
     path('group-time-slots/', GroupTimeSlotListView.as_view()),
     path('group-time-slots/<int:id>/delete/', GroupTimeSlotDeleteView.as_view()),
+    
+    path('neighborhoods/', get_table_data, name='table_data'),
 ]
