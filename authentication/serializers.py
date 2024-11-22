@@ -154,7 +154,7 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
             return {'email': user.email}
             
         except User.DoesNotExist:
-            raise AuthenticationFailed('Invalid credentials, try again')
+            raise AuthenticationFailed('user not found')
         
         
 class PasswordResetConfirmSerializer(serializers.ModelSerializer):

@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
-class TimeSlot(models.Model):
+class UserTimeSlot(models.Model):
     day_of_week = models.CharField(max_length=255)
     start_time = models.FloatField()
     end_time = models.FloatField()

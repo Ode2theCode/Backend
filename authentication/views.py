@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 
 from authentication.utils import send_otp_email
@@ -105,7 +105,7 @@ class UserRetriveView(APIView):
 class UserDeleteView(APIView):
     serializer_class= UserDeleteSerializer
     
-    def post(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         if (not request.user.is_authenticated):
             return Response("user not authenticated", status=status.HTTP_401_UNAUTHORIZED)
         
@@ -125,7 +125,7 @@ class UserDeleteView(APIView):
 
 class UserUpdateView(APIView):
     serializer_class= UserUpdateSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def patch(self, request, *args, **kwargs):
         try:
