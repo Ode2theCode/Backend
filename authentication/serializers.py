@@ -140,10 +140,9 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
             
             uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
             token = PasswordResetTokenGenerator().make_token(user)
-            request = self.context.get('request')
-            site_url = get_current_site(request).domain
-            relative_link = reverse('password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
-            absolute_url = f'http://{site_url}{relative_link}'
+            # relative_link = reverse('reset-password', kwargs={'uidb64': uidb64, 'token': token})
+            # absolute_url = f'http://localhost:5173/{relative_link}'
+            absolute_url = f'https://localhost:5173/reset-password/{uidb64}/{token}'
             
             email_subject = 'Reset your password'
             email_body = f'Click the link below to reset your password\n{absolute_url}'
@@ -154,7 +153,7 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
             return {'email': user.email}
             
         except User.DoesNotExist:
-            raise AuthenticationFailed('Invalid credentials, try again')
+            raise AuthenticationFailed('user not found')
         
         
 class PasswordResetConfirmSerializer(serializers.ModelSerializer):

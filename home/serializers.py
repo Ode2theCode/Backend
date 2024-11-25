@@ -21,11 +21,16 @@ class HomeSerializer(serializers.Serializer):
         return pending_groups
     
     
-class TimeSlotSerializer(serializers.ModelSerializer):
+class UserTimeSlotSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TimeSlot
+        model = UserTimeSlot
         fields = ['id', 'day_of_week', 'start_time', 'end_time']
         read_only_fields = ['id']
+        
+class GroupTimeSlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupTimeSlot
+        fields = ['id', 'day_of_week', 'start_time', 'end_time']
         
 class SuggestionSerializer(serializers.ModelSerializer):
     class Meta:
