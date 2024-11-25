@@ -18,7 +18,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     level = models.CharField(max_length=2, default='A1')
     city = models.CharField(max_length=255, blank=True, null=True)
     neighborhood = models.CharField(max_length=255, blank=True, null=True)
-        
+
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'password']
 

@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
-
 from authentication.utils import send_otp_email
 from .serializers import *
 from .models import *
@@ -47,6 +46,7 @@ class LoginUserView(APIView):
     
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'request': request})
+
         if serializer.is_valid(raise_exception=True):
             return Response(serializer.data, status=status.HTTP_200_OK)
         
