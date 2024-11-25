@@ -39,7 +39,7 @@ class GroupRetrieveSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Group
-        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 
+        fields = ['id', 'title', 'description', 'image', 'level', 'city', 'neighborhood', 
                   'created_at', 'max_members', 'meeting_url', 'private', 
                   'owner_username', 'member_usernames']
 
@@ -53,7 +53,7 @@ class GroupRetrieveSerializer(serializers.ModelSerializer):
 class GroupUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ['title', 'description', 'level', 'city', 'neighborhood', 'max_members', 'meeting_url', 'private']
+        fields = ['title', 'description', 'image', 'level', 'city', 'neighborhood', 'max_members', 'meeting_url', 'private']
         
     def validate(self, data):
         if 'level' in data and data['level'] not in VALID_LEVELS:
@@ -69,6 +69,7 @@ class GroupUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
+        instance.image = validated_data.get('image', instance.image)
         instance.level = validated_data.get('level', instance.level)
         instance.city = validated_data.get('city', instance.city)
         instance.neighborhood = validated_data.get('neighborhood', instance.neighborhood)

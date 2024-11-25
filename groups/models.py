@@ -3,6 +3,7 @@ from django.db import models
 class Group(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='group_images/', null=True, blank=True)
     level = models.CharField(max_length=255)
     city = models.CharField(max_length=255, blank=True, null=True)
     neighborhood = models.CharField(max_length=255, blank=True, null=True)

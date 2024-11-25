@@ -2,9 +2,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+
 
 from authentication.models import User
-
 from .serializers import *
 from .models import *
 from .permissions import *
@@ -38,6 +39,7 @@ class GroupRetrieveView(APIView):
 
 class GroupUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     serializer_class = GroupUpdateSerializer
     
