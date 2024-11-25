@@ -75,20 +75,6 @@ class PasswordResetConfirmView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class LogoutUserView(APIView):
-    serializer_class = UserLogoutSerializer
-    
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        refresh_token = serializer.validated_data.get('refresh_token')
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response("logout successfully", status=status.HTTP_200_OK)
-        except:
-            return Response("invalid token", status=status.HTTP_400_BAD_REQUEST)
         
 class UserRetriveView(APIView):
     serializer_class= UserRetriveSerializer
