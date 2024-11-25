@@ -1,4 +1,6 @@
 from email.message import EmailMessage
+import random
+
 import smtplib
 import secrets
 from .models import *
@@ -7,8 +9,9 @@ from django.conf import settings
 def send_otp_email(email):
     from_email = settings.EMAIL_HOST_USER
     password = settings.EMAIL_HOST_PASSWORD
-    otp = secrets.randbelow(10**6)
-    otp = str(otp).zfill(6)
+
+    otp = random.randint(100000, 999999)
+
     
     temp_user = TempUser.objects.get(email=email)
     OneTimePassword.objects.create(temp_user=temp_user, otp=otp)

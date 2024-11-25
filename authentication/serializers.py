@@ -121,6 +121,9 @@ class UserLoginSerializer(serializers.ModelSerializer):
             'refresh_token': str(tokens['refresh']),
         }
         
+class UserLogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+        
 class PasswordResetRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     class Meta:
@@ -135,10 +138,9 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
             
             uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
             token = PasswordResetTokenGenerator().make_token(user)
-            request = self.context.get('request')
-            site_url = get_current_site(request).domain
-            relative_link = reverse('password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
-            absolute_url = f'http://{site_url}{relative_link}'
+            # relative_link = reverse('reset-password', kwargs={'uidb64': uidb64, 'token': token})
+            # absolute_url = f'http://localhost:5173/{relative_link}'
+            absolute_url = f'https://localhost:5173/reset-password/{uidb64}/{token}'
             
             email_subject = 'Reset your password'
             email_body = f'Click the link below to reset your password\n{absolute_url}'
@@ -149,7 +151,8 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
             return {'email': user.email}
             
         except User.DoesNotExist:
-            raise AuthenticationFailed('Invalid credentials, try again')
+            raise AuthenticationFailed('user not found')
+
         
         
 class PasswordResetConfirmSerializer(serializers.ModelSerializer):
@@ -174,3 +177,31 @@ class PasswordResetConfirmSerializer(serializers.ModelSerializer):
         user.save()
         
         return user
+    
+
+class UserRetriveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'level', 'date_joined', 'city', 'neighborhood', 'profile_image']
+        
+
+class UserDeleteSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(min_length=8, max_length=64, write_only=True)
+    class Meta:
+        model = User
+        fields = ['password']
+        
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['level', 'city', 'neighborhood', 'profile_image']
+        
+        def update(self, instance, validated_data):
+            instance.level = validated_data.get('level', instance.level)
+            instance.city = validated_data.get('city', instance.city)
+            instance.neighborhood = validated_data.get('neighborhood', instance.neighborhood)
+            profile_image = validated_data.get('profile_image', instance.profile_image)
+            instance.save()
+            return instance
+    
