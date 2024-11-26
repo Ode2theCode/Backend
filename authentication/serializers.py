@@ -121,6 +121,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
             'refresh_token': str(tokens['refresh']),
         }
         
+        
 class PasswordResetRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     class Meta:
@@ -193,14 +194,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['level', 'city', 'neighborhood', 'profile_image']
-        
-        def update(self, instance, validated_data):
-            instance.level = validated_data.get('level', instance.level)
-            instance.city = validated_data.get('city', instance.city)
-            instance.neighborhood = validated_data.get('neighborhood', instance.neighborhood)
-            instance.profile_image = validated_data.get('profile_image', instance.profile_image)
-            instance.save()
-            return instance
         
 
 class ChangePasswordSerializer(serializers.Serializer):
