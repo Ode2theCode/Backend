@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from authentication.models import User
 from groups.models import *
 
 VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
@@ -53,5 +54,11 @@ class GroupDeclineRequestSerializer(serializers.Serializer):
 
 class GroupKickSerializer(serializers.Serializer):
     username = serializers.CharField()
+    
+class GroupMemberListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username']
+        
     
         
