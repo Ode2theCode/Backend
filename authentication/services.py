@@ -1,3 +1,5 @@
+from datetime import timezone, timedelta
+
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
@@ -5,6 +7,46 @@ from .models import *
 
 class UserService:
     VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'a1', 'a2', 'b1', 'b2', 'c1', 'c2']
+    TTL = timezone.now() - timedelta(minutes=1)
+    
+    def check_username(username):
+        if User.objects.filter(username=username).exists():
+            raise ValidationError({'detail': 'Username already exists', 'status': status.HTTP_400_BAD_REQUEST})
+    
+    def check_email(email):
+        if User.objects.filter(email=email).exists():
+            raise ValidationError({'detail': 'Email already exists', 'status': status.HTTP_400_BAD_REQUEST})
+    
+    @classmethod
+    def check_temp_user(cls, username, email):
+        temp_user_by_username = TempUser.objects.filter(username=username).first()
+        temp_user_by_email = TempUser.objects.filter(email=email).first()
+        
+        if temp_user_by_username and temp_user_by_username.date_joined < cls.TTL:
+            raise ValidationError({'detail': 'Username already exists', 'status': status.HTTP_400_BAD_REQUEST})
+        
+        if temp_user_by_email and temp_user_by_email.date_joined < cls.TTL:
+            raise ValidationError({'detail': 'Email already exists', 'status': status.HTTP_400_BAD_REQUEST})
+        
+        if temp_user_by_username and temp_user_by_username.date_joined > cls.TTL:
+            temp_user_by_username.delete()
+        
+        if temp_user_by_email and temp_user_by_email.date_joined > cls.TTL:
+            temp_user_by_email.delete()
+    
+    @classmethod
+    def create_temp_user(cls, data):
+        cls.check_username(data['username'])
+        cls.check_email(data['email'])
+        cls.check_temp_user(data['username'], data['email'])
+        
+        temp_user = TempUser.objects.create_user(data['username'], data['email'], data['password'])
+        return temp_user
+    
+    @classmethod
+    def verify_email(cls, email, otp):
+        temp_user = TempUser.objects.filter(email=email).first()
+        
     
     @classmethod
     def check_level(cls, level):

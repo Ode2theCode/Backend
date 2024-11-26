@@ -37,7 +37,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user_email = User.objects.filter(email=email).first()
         
         temp_user_username = TempUser.objects.filter(username=username).first()
-        print(temp_user_username)
         temp_user_email = TempUser.objects.filter(email=email).first()
         
         if temp_user_username:
