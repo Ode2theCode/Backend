@@ -35,7 +35,7 @@ class GroupTimeSlotSerializer(serializers.ModelSerializer):
 class SuggestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'max_members', 'meeting_url', 'private']
+        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private']
         
 
         

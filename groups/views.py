@@ -9,69 +9,59 @@ from authentication.models import User
 from .serializers import *
 from .models import *
 from .permissions import *
+from .services import *
 
 
 class GroupCreateView(APIView):
     permission_classes = [IsAuthenticated]
-    
     serializer_class = GroupCreateSerializer
     
     def post(self, request):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(owner=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            GroupService.create_group(request.user, serializer.validated_data)
+            return Response("group created successfully", status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        
 
 
 class GroupRetrieveView(APIView):
     serializer_class = GroupRetrieveSerializer
     
     def get(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
+        try:
+            group = GroupService.retrieve_group(kwargs.get('title'))
             serializer = self.serializer_class(group)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 
 class GroupUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    
     serializer_class = GroupUpdateSerializer
     
     def patch(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
-            serializer = self.serializer_class(
-                group, 
-                data=request.data, 
-                partial=True
-            )
-            if serializer.is_valid(raise_exception=True):
-                serializer.update(group, serializer.validated_data)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
-
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            GroupService.update_group(kwargs.get('title'), serializer.validated_data)
+            return Response("group updated successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 class GroupDeleteView(APIView):  
     permission_classes = [IsAuthenticated, IsGroupOwner]  
     def delete(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            if request.user.owned_groups.filter(title=kwargs.get('title')).exists():
-                group = Group.objects.get(title=kwargs.get('title'))
-                group.delete()
-                return Response("group deleted successfully", status=status.HTTP_200_OK)
-            else:
-                return Response("you are not the owner of this group", status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        try:
+            GroupService.delete_group(kwargs.get('title'))
+            return Response("group deleted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
 
 
@@ -79,92 +69,75 @@ class GroupJoinRequestView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
-            if group.max_members < group.members.count():
-                return Response("group is full", status=status.HTTP_400_BAD_REQUEST)
-            if group.level != request.user.level:
-                return Response(f"your level is not compatible with this group your level is {request.user.level} and group level is {group.level}", status=status.HTTP_400_BAD_REQUEST)
-            
-            if group.private:
-                group.add_pending_member(request.user)
-                return Response("join request sent successfully", status=status.HTTP_200_OK)
-            else:
-                group.add_member(request.user)
-                return Response("you are now a member of this group", status=status.HTTP_200_OK)
-       
+        try:
+            GroupService.join_request(kwargs.get('title'), request.user)
+            return Response("request sent successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
      
 class GroupPendingRequestView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
+    serializer_class = GroupPendingRequestSerializer
     
     def get(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
-            serializer = GroupPendingRequestSerializer(group)
+        try:
+            group = GroupService.pending_requests(kwargs.get('title'))
+            serializer = self.serializer_class(group)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 
 class GroupAcceptRequestView(APIView):
-    serializer_class = GroupAcceptRequestSerializer
     permission_classes = [IsAuthenticated, IsGroupOwner]
+    serializer_class = GroupAcceptRequestSerializer
     
     def post(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
-            serializer = self.serializer_class(group, data=request.data)
-            if serializer.is_valid(raise_exception=True):
-                user = User.objects.get(username=serializer.validated_data['username'])
-                group.accept_pending_member(user)
-                return Response("request accepted successfully", status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            GroupService.accept_request(kwargs.get('title'), serializer.validated_data['username'])
+            return Response("request accepted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+       
         
         
 class GroupDeclineRequestView(APIView):
-    serializer_class = GroupDeclineRequestSerializer
     permission_classes = [IsAuthenticated, IsGroupOwner]
+    serializer_class = GroupDeclineRequestSerializer
     
     def post(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
-            serializer = self.serializer_class(group, data=request.data)
-            if serializer.is_valid(raise_exception=True):
-                user = User.objects.get(username=serializer.validated_data['username'])
-                group.decline_pending_member(user)
-                return Response("request declined successfully", status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            GroupService.decline_request(kwargs.get('title'), serializer.validated_data['username'])
+            return Response("request accepted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
 
 class GroupLeaveView(APIView):
     permission_classes = [IsAuthenticated, IsGroupMember]
+    
     def post(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
-            group.remove_member(request.user)
-            return Response("you left the group successfully", status=status.HTTP_200_OK)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        try:
+            GroupService.leave_group(kwargs.get('title'), request.user)
+            return Response("group left successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
 
 class GroupKickView(APIView):
     serializer_class = GroupKickSerializer
     permission_classes = [IsAuthenticated, IsGroupOwner]
+    
     def post(self, request, *args, **kwargs):
-        if Group.objects.filter(title=kwargs.get('title')).exists():
-            group = Group.objects.get(title=kwargs.get('title'))
-            serializer = self.serializer_class(group, data=request.data)
-            if serializer.is_valid(raise_exception=True):
-                user = User.objects.get(username=serializer.validated_data['username'])
-                group.remove_member(user)
-                return Response("user kicked successfully", status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response("group not found", status=status.HTTP_404_NOT_FOUND)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            GroupService.kick_user(kwargs.get('title'), serializer.validated_data['username'])
+            return Response("user kicked successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        

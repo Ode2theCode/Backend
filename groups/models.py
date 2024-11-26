@@ -8,10 +8,8 @@ class Group(models.Model):
     city = models.CharField(max_length=255, blank=True, null=True)
     neighborhood = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    max_members = models.IntegerField()
     meeting_url = models.URLField(blank=True, null=True)
     private = models.BooleanField(default=False)
-    
     owner = models.ForeignKey('authentication.User', on_delete=models.CASCADE, related_name='owned_groups')
     members = models.ManyToManyField('authentication.User', related_name='joined_groups')
     pending_members = models.ManyToManyField('authentication.User', related_name='pending_groups')
@@ -20,11 +18,11 @@ class Group(models.Model):
     def add_pending_member(self, user):
         self.pending_members.add(user)
     
-    def remove_pending_member(self, user):
-        self.pending_members.remove(user)
-    
     def accept_pending_member(self, user):
         self.members.add(user)
+        self.pending_members.remove(user)
+    
+    def decline_pending_member(self, user):
         self.pending_members.remove(user)
     
     def add_member(self, user):

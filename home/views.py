@@ -9,14 +9,13 @@ from groups.models import*
 from .permissions import *
 
 class HomeView(APIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = HomeSerializer
     
     def get(self, request):
-        if request.user.is_authenticated:    
-            serializer = self.serializer_class(request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response("landing page", status=status.HTTP_200_OK)
+        serializer = self.serializer_class(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
         
 class UserTimeSlotCreateView(APIView):
     permission_classes = [IsAuthenticated]
