@@ -18,7 +18,7 @@ class RegisterUserView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             UserService.create_temp_user(serializer.validated_data)
-            return Response("user created successfully", status=status.HTTP_201_CREATED)
+            return Response("user created successfully, please verify your email", status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
@@ -31,7 +31,7 @@ class VerifyEmailView(APIView):
         serializer.is_valid(raise_exception=True)
         
         try:
-            UserService.verify_email(serializer.validated_data)
+            UserService.verify_email(serializer.validated_data['otp'])
             return Response("email verified successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
@@ -59,7 +59,7 @@ class PasswordResetRequestView(APIView):
         serializer.is_valid(raise_exception=True)
         
         try:
-            UserService.password_reset_request(serializer.validated_data['email'])
+            UserService.request_reset_password(serializer.validated_data['email'])
             return Response("password reset link sent successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
@@ -87,22 +87,22 @@ class UserRetriveView(APIView):
         user = request.user
         
         serializer = self.serializer_class(user)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 class UserDeleteView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class= UserDeleteSerializer
     
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request):
         
         user = request.user
         serializer = self.serializer_class(data = request.data)
         
         serializer.is_valid(raise_exception=True)
         
-        if user.check_password(serializer.validated_data.get('password')):
+        if not user.check_password(serializer.validated_data.get('password')):
             return Response("invalid password", status=status.HTTP_400_BAD_REQUEST)
         
         user.delete()

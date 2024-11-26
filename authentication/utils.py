@@ -11,11 +11,13 @@ def send_otp_email(email):
     password = settings.EMAIL_HOST_PASSWORD
 
     otp = random.randint(100000, 999999)
-
+    while TempUser.objects.filter(otp=otp).exists():
+        otp = random.randint(100000, 999999)
     
     temp_user = TempUser.objects.get(email=email)
-    OneTimePassword.objects.create(temp_user=temp_user, otp=otp)
-    
+    temp_user.otp = otp
+    temp_user.save()
+        
     subject = 'One Time Password'
     body = f'Thanks for registering on freediscussion.ir.\nYour One Time Password is {otp}' 
     

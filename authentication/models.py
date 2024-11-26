@@ -40,12 +40,7 @@ class TempUser(models.Model):
     email = models.EmailField(max_length=255)
     password = models.CharField(max_length=255)
     date_joined = models.DateTimeField(auto_now_add=True)
+    otp = models.CharField(max_length=6, unique=True, null=True, blank=True)
     
     def __str__(self):
         return self.username
-    
-
-class OneTimePassword(models.Model):
-    temp_user = models.ForeignKey(TempUser, on_delete=models.CASCADE)
-    otp = models.CharField(max_length=6, unique=True)
-    

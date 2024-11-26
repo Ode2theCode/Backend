@@ -29,7 +29,6 @@ class GroupCreateView(APIView):
 
 
 class GroupRetrieveView(APIView):
-    permission_classes = [IsAuthenticated]
     serializer_class = GroupRetrieveSerializer
     
     def get(self, request, *args, **kwargs):

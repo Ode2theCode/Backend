@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 from django.utils.encoding import smart_str, smart_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -15,7 +16,7 @@ from FD import settings
 
 class UserService:
     VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'a1', 'a2', 'b1', 'b2', 'c1', 'c2']
-    TTL = datetime.now() - timedelta(minutes=1)
+
     
     @staticmethod
     def check_username(username):
@@ -31,18 +32,21 @@ class UserService:
     def check_temp_user(cls, username, email):
         temp_user_by_username = TempUser.objects.filter(username=username).first()
         temp_user_by_email = TempUser.objects.filter(email=email).first()
+
+        if temp_user_by_username and (timezone.now() - temp_user_by_username.date_joined) > timedelta(minutes=0):
+            temp_user_by_username.delete()
+            return
         
-        if temp_user_by_username and temp_user_by_username.date_joined < cls.TTL:
+        if temp_user_by_email and (timezone.now() - temp_user_by_email.date_joined) > timedelta(minutes=0):
+            temp_user_by_email.delete()
+            return
+            
+        if temp_user_by_username :
             raise ValidationError({'detail': 'Username already exists', 'status': status.HTTP_400_BAD_REQUEST})
         
-        if temp_user_by_email and temp_user_by_email.date_joined < cls.TTL:
+        if temp_user_by_email:
             raise ValidationError({'detail': 'Email already exists', 'status': status.HTTP_400_BAD_REQUEST})
         
-        if temp_user_by_username and temp_user_by_username.date_joined > cls.TTL:
-            temp_user_by_username.delete()
-        
-        if temp_user_by_email and temp_user_by_email.date_joined > cls.TTL:
-            temp_user_by_email.delete()
     
     @classmethod
     def create_temp_user(cls, data):
@@ -50,18 +54,20 @@ class UserService:
         cls.check_email(data['email'])
         cls.check_temp_user(data['username'], data['email'])
         
-        TempUser.objects.create_user(data['username'], data['email'], data['password'])
+        TempUser.objects.create(username=data['username'], email=data['email'], password=data['password'])
         send_otp_email(data['email'])
     
     @classmethod
     def verify_email(cls, otp):
-        if not OneTimePassword.objects.filter(otp=otp).exists():
+        if not TempUser.objects.filter(otp=otp).exists():
             raise ValidationError({'detail': 'invalid one time password', 'status': status.HTTP_400_BAD_REQUEST})
         
-        otp_obj = OneTimePassword.objects.get(otp=otp)
-        temp_user = otp_obj.temp_user
-        
-        User.objects.create(uusername=temp_user.username, email=temp_user.email, password=temp_user.password)
+        temp_user = TempUser.objects.get(otp=otp)
+        user = User.objects.create(username=temp_user.username, email=temp_user.email, password=temp_user.password)
+        user.set_password(temp_user.password)
+        user.save()
+        print(user.password)
+        temp_user.delete()
          
     @classmethod
     def check_level(cls, level):
@@ -92,6 +98,8 @@ class UserService:
     
     @staticmethod
     def login(username, password):
+        print(password)
+        print(User.objects.get(username=username).password)
         if not User.objects.filter(username=username).exists():
             raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
         
