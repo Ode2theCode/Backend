@@ -1,13 +1,15 @@
-from datetime import timezone, timedelta
+from datetime import datetime, timedelta
+from urllib import response
 
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
 from .models import *
+from .utils import send_otp_email
 
 class UserService:
     VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'a1', 'a2', 'b1', 'b2', 'c1', 'c2']
-    TTL = timezone.now() - timedelta(minutes=1)
+    TTL = datetime.now() - timedelta(minutes=1)
     
     def check_username(username):
         if User.objects.filter(username=username).exists():
@@ -41,11 +43,20 @@ class UserService:
         cls.check_temp_user(data['username'], data['email'])
         
         temp_user = TempUser.objects.create_user(data['username'], data['email'], data['password'])
-        return temp_user
+        send_otp_email(data['email'])
+        return response({'detail': 'User created successfully\n Please check your email for One Time Password', 'status': status.HTTP_201_CREATED})
     
     @classmethod
     def verify_email(cls, email, otp):
-        temp_user = TempUser.objects.filter(email=email).first()
+        if not OneTimePassword.objects.filter(otp=otp).exists():
+            raise ValidationError({'detail': 'invalid one time password', 'status': status.HTTP_400_BAD_REQUEST})
+        
+        otp_obj = OneTimePassword.objects.get(otp=otp)
+        temp_user = otp_obj.temp_user
+        
+        User.objects.create(uusername=temp_user.username, email=temp_user.email, password=temp_user.password)
+        
+        return response({'detail': 'email verified', 'status': status.HTTP_201_CREATED})
         
     
     @classmethod
