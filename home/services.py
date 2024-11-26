@@ -114,6 +114,10 @@ class GroupTimeSlotService:
     
     
     
+class HomeService:
+    def get_joined_groups(user) -> list[Group]:
+        return Group.objects.filter(members=user)
+    
 class SuggestionService:
     
     def get_suggestions(user) -> list[Group]:

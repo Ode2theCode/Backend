@@ -4,22 +4,12 @@ from .models import *
 from authentication.models import User
 from groups.models import Group
 
-class HomeSerializer(serializers.Serializer):
-    joined_groups = serializers.SerializerMethodField()
-    pending_groups = serializers.SerializerMethodField()
+class HomeSerializer(serializers.ModelSerializer):
     
-    class meta:
-        model = User
-        fields = ['joined_groups', 'pending_groups']
+    class Meta:
+        model = Group
+        fields = '__all__'
         
-    def get_joined_groups(self, obj):
-        joined_groups = [group.title for group in obj.joined_groups.all()]
-        return joined_groups
-    
-    def get_pending_groups(self, obj):
-        pending_groups = [group.title for group in obj.pending_groups.all()]
-        return pending_groups
-    
     
 class UserTimeSlotSerializer(serializers.ModelSerializer):
     class Meta:
