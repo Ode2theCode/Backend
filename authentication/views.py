@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
-from authentication.utils import send_otp_email
+
 from .serializers import *
 from .models import *
 from .services import *
@@ -16,13 +16,12 @@ class RegisterUserView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
+        try:
+            UserService.create_temp_user(serializer.validated_data)
+            return Response("user created successfully", status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
-        # try:
-        UserService.create_temp_user(serializer.validated_data)
-        # except as e:
-        
-        
-    
     
 class VerifyEmailView(APIView):
     serializer_class = VerifyEmailSerializer
@@ -31,46 +30,52 @@ class VerifyEmailView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        # try:
-        UserService.verify_email(serializer.validated_data)
-        # except as e:
+        try:
+            UserService.verify_email(serializer.validated_data)
+            return Response("email verified successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
-        
-    
     
 
 class LoginUserView(APIView):
     serializer_class = UserLoginSerializer
     
     def post(self, request):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
-
-        if serializer.is_valid(raise_exception=True):
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            tokens = UserService.login(serializer.validated_data['username'], serializer.validated_data['password'])
+            return Response(tokens, status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 
 class PasswordResetRequestView(APIView):
     serializer_class = PasswordResetRequestSerializer
+    
     def post(self, request):
-        serializer = PasswordResetRequestSerializer(data=request.data, context={'request': request})
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        if serializer.is_valid(raise_exception=True):
-            return Response("password reset link has been sent to your email", status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            UserService.password_reset_request(serializer.validated_data['email'])
+            return Response("password reset link sent successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
    
  
 class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
     def post(self, request, uidb64, token):
-        serializer = PasswordResetConfirmSerializer(data=request.data, context={'request': request, 'uidb64': uidb64, 'token': token})
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         
-        if serializer.is_valid(raise_exception=True):
+        try:
+            UserService.confirm_reset_password(uidb64, token, serializer.validated_data['password'])
             return Response("password reset successfully", status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
     
 
         
@@ -82,7 +87,8 @@ class UserRetriveView(APIView):
         user = request.user
         
         serializer = self.serializer_class(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
     
 
 class UserDeleteView(APIView):

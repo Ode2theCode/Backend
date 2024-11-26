@@ -13,7 +13,6 @@ class GroupCreateSerializer(serializers.ModelSerializer):
 class GroupRetrieveSerializer(serializers.ModelSerializer):
     owner_username = serializers.SerializerMethodField(read_only=True)
     member_usernames = serializers.SerializerMethodField(read_only=True)
-    
     class Meta:
         model = Group
         fields = ['id', 'title', 'description', 'image', 'level', 'city', 'neighborhood', 
@@ -33,6 +32,7 @@ class GroupUpdateSerializer(serializers.ModelSerializer):
         fields = ['title', 'description', 'image', 'level', 'city', 'neighborhood', 'meeting_url', 'private']
         read_only_fields = ['title']
 
+
 class GroupPendingRequestSerializer(serializers.ModelSerializer):
     pending_members = serializers.SerializerMethodField(read_only=True)
     class Meta:
@@ -42,6 +42,7 @@ class GroupPendingRequestSerializer(serializers.ModelSerializer):
     def get_pending_members(self, obj):
         return [member.username for member in obj.pending_members.all()]
     
+
 class GroupAcceptRequestSerializer(serializers.Serializer):
     username = serializers.CharField()
     
