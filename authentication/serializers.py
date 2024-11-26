@@ -201,4 +201,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.profile_image = validated_data.get('profile_image', instance.profile_image)
             instance.save()
             return instance
-    
+        
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(min_length=8, max_length=64, write_only=True)
+    new_password = serializers.CharField(min_length=8, max_length=64, write_only=True)
+    class Meta:
+        model = User
+        fields = ['old_password', 'new_password']

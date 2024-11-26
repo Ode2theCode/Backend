@@ -8,7 +8,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from authentication.utils import send_otp_email
 from .serializers import *
 from .models import *
-
+from .services import *
 
 class RegisterUserView(APIView):
     serializer_class = UserCreateSerializer
@@ -127,3 +127,28 @@ class UserUpdateView(APIView):
         
         except User.DoesNotExist:
             return Response("user not found", status=status.HTTP_404_NOT_FOUND)
+
+
+class ChangePasswordView(APIView):
+    serializer_class= ChangePasswordSerializer
+    
+    def patch(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            username = request.user.username
+            user = User.objects.get(username=username)
+            
+            old_password = serializer.validated_data.get('old_password')
+            new_password = serializer.validated_data.get('new_password')
+            
+            UserService.change_password(user, old_password, new_password)
+        
+        except User.DoesNotExist:
+            return Response("user not found", status=status.HTTP_404_NOT_FOUND)
+        
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        
+        return Response("password changed successfully", status=status.HTTP_200_OK)
