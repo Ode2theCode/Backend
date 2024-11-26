@@ -37,5 +37,10 @@ class SuggestionSerializer(serializers.ModelSerializer):
         model = Group
         fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private']
         
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private']
+        
 
         

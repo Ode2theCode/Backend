@@ -32,7 +32,7 @@ class UserTimeSlotCreateView(APIView):
             )
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
 class UserTimeSlotListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -49,8 +49,11 @@ class UserTimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated]
     
     def delete(self, request, *args, **kwargs):
-        UserTimeSlotService.delete_time_slot(request.user, kwargs.get('id'))
-        return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+        try:
+            UserTimeSlotService.delete_time_slot(request.user, kwargs.get('id'))
+            return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 
 
@@ -69,7 +72,7 @@ class GroupTimeSlotCreateView(APIView):
             )
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 
 class GroupTimeSlotListView(APIView):
@@ -87,8 +90,11 @@ class GroupTimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
     def delete(self, request, *args, **kwargs):
-        GroupTimeSlotService.delete_group_time_slot(request.user, kwargs.get('id'))
-        return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+        try:
+            GroupTimeSlotService.delete_group_time_slot(request.user, kwargs.get('id'))
+            return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
     
     
 class SuggestionsView(APIView):
@@ -99,6 +105,17 @@ class SuggestionsView(APIView):
     def get(self, requst):
         suggestions = SuggestionService.get_suggestions(requst.user)
         serializer = self.serializer_class(suggestions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class AllGroupsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    serializer_class = GroupSerializer
+    
+    def get(self, request):
+        groups = AllGroupsService.get_all_groups()
+        serializer = self.serializer_class(groups, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     
