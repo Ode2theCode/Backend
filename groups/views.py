@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.pagination import PageNumberPagination
 
 
 from authentication.models import User
@@ -140,4 +141,25 @@ class GroupKickView(APIView):
             return Response("user kicked successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        
+
+class GroupMemberListView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupMemberListSerializer
+    pagination_class = PageNumberPagination
+    
+    
+    def get(self, request, *args, **kwargs):
+        try:
+            members = GroupService.member_list(kwargs.get('title'))
+            
+            paginator = self.pagination_class()
+            paginated_data = paginator.paginate_queryset(members, request)
+            serializer = self.serializer_class(paginated_data, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        
+        
+        
         

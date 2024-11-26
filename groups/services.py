@@ -119,4 +119,13 @@ class GroupService:
             raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
         group.remove_member(user)
         group.save()
+        
+    
+    @staticmethod
+    def member_list(title):
+        if not Group.objects.filter(title=title).exists():
+            raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        group = Group.objects.get(title=title)
+        return group.members.all()
     
