@@ -4,10 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 
+from django_filters.rest_framework import DjangoFilterBackend
+
+
 from .serializers import *
 from .services import *
 from groups.models import*
 from .permissions import *
+from .filters import *
 
 class HomeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -40,9 +44,10 @@ class AllGroupsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupSerializer
     pagination_class = PageNumberPagination
+    filter_backends = [DjangoFilterBackend]
     
     def get(self, request):
-        groups = AllGroupsService.get_all_groups()
+        groups = AllGroupsService.get_all_groups(request)
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(groups, request)
         serializer = self.serializer_class(paginated_data, many=True)

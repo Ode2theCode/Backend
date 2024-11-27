@@ -6,6 +6,8 @@ from rest_framework import status
 from .models import *
 from groups.models import *
 
+from .filters import GroupFilter
+
 class UserTimeSlotService:
     @staticmethod
     def validate_time_range(start_time: float, end_time: float) -> None:
@@ -145,5 +147,8 @@ class SuggestionService:
     
 
 class AllGroupsService:
-    def get_all_groups() -> list[Group]:
-        return Group.objects.all()
+    @staticmethod
+    def get_all_groups(request) -> QuerySet[Group]:
+        queryset = Group.objects.all()
+        filterset = GroupFilter(request.GET, queryset=queryset)
+        return filterset.qs
