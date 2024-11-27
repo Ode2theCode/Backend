@@ -3,6 +3,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter
+
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -17,14 +19,22 @@ class HomeView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = HomeSerializer
     pagination_class = PageNumberPagination
+    filter_backends = [SearchFilter]
+    search_fields = ['title']
     
     def get(self, request):
-        joined_groups = HomeService.get_joined_groups(request.user)
+        joined_groups = HomeService.get_joined_groups(request.user, request)
+        filtered_groups = self.filter_queryset(joined_groups)
         paginator = self.pagination_class()
-        paginated_data = paginator.paginate_queryset(joined_groups, request)
+        paginated_data = paginator.paginate_queryset(filtered_groups, request)
         serializer = self.serializer_class(paginated_data, many=True)
         
         return paginator.get_paginated_response(serializer.data)
+    
+    def filter_queryset(self, queryset):
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
 
 
 class SuggestionsView(APIView):
@@ -44,14 +54,21 @@ class AllGroupsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupSerializer
     pagination_class = PageNumberPagination
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['title']
     
     def get(self, request):
         groups = AllGroupsService.get_all_groups(request)
+        filtered_groups = self.filter_queryset(groups)
         paginator = self.pagination_class()
-        paginated_data = paginator.paginate_queryset(groups, request)
+        paginated_data = paginator.paginate_queryset(filtered_groups, request)
         serializer = self.serializer_class(paginated_data, many=True)
         return paginator.get_paginated_response(serializer.data)
+
+    def filter_queryset(self, queryset):
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
     
 
         

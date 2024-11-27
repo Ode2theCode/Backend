@@ -1,4 +1,4 @@
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
@@ -117,8 +117,14 @@ class GroupTimeSlotService:
     
     
 class HomeService:
-    def get_joined_groups(user) -> list[Group]:
-        return Group.objects.filter(members=user)
+    def get_joined_groups(user, request) -> list[Group]:
+        queryset = Group.objects.filter(members=user)
+        
+        search_term = request.GET.get('search')
+        if search_term:
+            queryset = queryset.filter(title__icontains=search_term)
+        
+        return queryset
     
 class SuggestionService:
     
@@ -150,5 +156,12 @@ class AllGroupsService:
     @staticmethod
     def get_all_groups(request) -> QuerySet[Group]:
         queryset = Group.objects.all()
+        
         filterset = GroupFilter(request.GET, queryset=queryset)
-        return filterset.qs
+        queryset = filterset.qs
+        
+        search_term = request.GET.get('search')
+        if search_term:
+            queryset = queryset.filter(title__icontains=search_term)
+        
+        return queryset
