@@ -57,8 +57,10 @@ class GroupService:
         
         if group.private:
             group.add_pending_member(user)
+            return "private"
         else:
             group.add_member(user)
+            return "public"
     
     @staticmethod
     def pending_requests(title):
@@ -120,7 +122,6 @@ class GroupService:
         group.remove_member(user)
         group.save()
         
-    
     @staticmethod
     def member_list(title):
         if not Group.objects.filter(title=title).exists():

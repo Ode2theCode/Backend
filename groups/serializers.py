@@ -14,17 +14,21 @@ class GroupCreateSerializer(serializers.ModelSerializer):
 class GroupRetrieveSerializer(serializers.ModelSerializer):
     owner_username = serializers.SerializerMethodField(read_only=True)
     member_usernames = serializers.SerializerMethodField(read_only=True)
+    number_of_members = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Group
         fields = ['id', 'title', 'description', 'image', 'level', 'city', 'neighborhood', 
                   'created_at', 'meeting_url', 'private', 
-                  'owner_username', 'member_usernames']
+                  'owner_username', 'member_usernames', 'number_of_members']
 
     def get_owner_username(self, obj):
         return obj.owner.username if obj.owner else None
 
     def get_member_usernames(self, obj):
         return [member.username for member in obj.members.all()]
+    
+    def get_number_of_members(self, obj):
+        return obj.members.count()
 
 
 class GroupUpdateSerializer(serializers.ModelSerializer):
