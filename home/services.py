@@ -154,14 +154,5 @@ class SuggestionService:
 
 class AllGroupsService:
     @staticmethod
-    def get_all_groups(request) -> QuerySet[Group]:
-        queryset = Group.objects.all()
-        
-        filterset = GroupFilter(request.GET, queryset=queryset)
-        queryset = filterset.qs
-        
-        search_term = request.GET.get('search')
-        if search_term:
-            queryset = queryset.filter(title__icontains=search_term)
-        
-        return queryset
+    def get_all_groups() -> QuerySet[Group]:
+        return Group.objects.all()

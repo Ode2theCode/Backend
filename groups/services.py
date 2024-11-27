@@ -57,8 +57,10 @@ class GroupService:
         
         if group.private:
             group.add_pending_member(user)
+            return "private"
         else:
             group.add_member(user)
+            return "public"
     
     @staticmethod
     def pending_requests(title):

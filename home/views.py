@@ -1,9 +1,11 @@
+from django.db.models import Count
+
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -54,11 +56,14 @@ class AllGroupsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupSerializer
     pagination_class = PageNumberPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = GroupFilter
     search_fields = ['title']
+    ordering_fields = ['level', 'member_count']
     
     def get(self, request):
-        groups = AllGroupsService.get_all_groups(request)
+        groups = AllGroupsService.get_all_groups()
+        groups = groups.annotate(member_count=Count('members'))
         filtered_groups = self.filter_queryset(groups)
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(filtered_groups, request)

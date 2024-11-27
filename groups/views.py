@@ -71,8 +71,12 @@ class GroupJoinRequestView(APIView):
     
     def post(self, request, *args, **kwargs):
         try:
-            GroupService.join_request(kwargs.get('title'), request.user)
-            return Response("request sent successfully", status=status.HTTP_200_OK)
+            type = GroupService.join_request(kwargs.get('title'), request.user)
+            if type == "private":
+                return Response("request sent successfully", status=status.HTTP_200_OK)
+            elif type == "public":
+                return Response("you are now a member of this group", status=status.HTTP_200_OK)
+            
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
      
