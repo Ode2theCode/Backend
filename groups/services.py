@@ -3,6 +3,7 @@ from rest_framework import status
 
 from groups.models import Group
 from authentication.models import User
+from chat.models import Chat
 
 
 class GroupService:
@@ -15,6 +16,7 @@ class GroupService:
     def create_group(cls, user, data):        
         cls.check_title(data.get('title'))
         group = Group.objects.create(owner=user, **data)
+        Chat.objects.create(group=group)
         group.add_member(user)
         return group
 
