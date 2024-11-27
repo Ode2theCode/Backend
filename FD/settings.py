@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'authentication',
     'groups',
     'home',
+    'chat',
 
 ]
 

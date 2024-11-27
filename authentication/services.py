@@ -66,7 +66,6 @@ class UserService:
         user = User.objects.create(username=temp_user.username, email=temp_user.email, password=temp_user.password)
         user.set_password(temp_user.password)
         user.save()
-        print(user.password)
         temp_user.delete()
          
     @classmethod
@@ -98,8 +97,6 @@ class UserService:
     
     @staticmethod
     def login(username, password):
-        print(password)
-        print(User.objects.get(username=username).password)
         if not User.objects.filter(username=username).exists():
             raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
         
