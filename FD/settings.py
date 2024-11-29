@@ -14,6 +14,8 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
+    'daphne',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,6 +30,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'django_filters',
+    'channels',
     
     'authentication',
     'groups',
@@ -69,7 +72,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'FD.wsgi.application'
+# WSGI_APPLICATION = 'FD.wsgi.application'
+ASGI_APPLICATION = "FD.asgi.application"
+
 
 DATABASES = {
     'default': {
@@ -157,4 +162,21 @@ STORAGES = {
   "staticfiles": {
       "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
   },
+}
+
+
+
+import urllib.parse
+import redis
+
+redis_url = os.environ.get('REDIS_URL')
+parsed_url = urllib.parse.urlparse(redis_url)
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [f"rediss://{parsed_url.netloc}"],
+        },
+    },
 }
