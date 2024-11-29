@@ -1,7 +1,9 @@
 import json
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
-from django.contrib.auth import get_user_model
+
+from django.core.serializers.json import DjangoJSONEncoder
+
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
@@ -39,6 +41,18 @@ class ChatConsumer(WebsocketConsumer):
         )
 
         self.accept()
+        
+        messages =  self.get_chat_messages()
+        self.send(text_data=json.dumps({
+            'type': 'chat_history',
+            'messages': messages
+        }, cls=DjangoJSONEncoder))
+
+    
+    def get_chat_messages(self):
+        return list(self.chat.messages.all().order_by('timestamp').values(
+            'content', 'sender__username', 'timestamp'
+        ))
         
     def get_user_from_token(self, token):
         try:

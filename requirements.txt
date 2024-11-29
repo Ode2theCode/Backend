@@ -6,6 +6,7 @@ boto3==1.35.64
 botocore==1.35.64
 cffi==1.17.1
 channels==4.2.0
+channels_redis==4.2.1
 constantly==23.10.4
 cryptography==43.0.3
 daphne==4.1.2
@@ -23,6 +24,7 @@ inflection==0.5.1
 jmespath==1.0.1
 jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
+msgpack==1.1.0
 mysql-connector-python==9.1.0
 mysqlclient==2.2.5
 pillow==11.0.0
@@ -34,6 +36,7 @@ pyOpenSSL==24.2.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 PyYAML==6.0.2
+redis==5.2.0
 referencing==0.35.1
 rpds-py==0.20.1
 s3transfer==0.10.3
