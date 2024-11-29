@@ -72,7 +72,6 @@ class ChatConsumer(WebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
         user = self.scope["user"]
-        print(user)
         
         db_message = Message.objects.create(
             chat=self.chat,

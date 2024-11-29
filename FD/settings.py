@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'django_filters',
+    'channels',
     
     'authentication',
     'groups',
@@ -71,7 +72,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'FD.wsgi.application'
+# WSGI_APPLICATION = 'FD.wsgi.application'
 ASGI_APPLICATION = "FD.asgi.application"
 
 
@@ -164,11 +165,18 @@ STORAGES = {
 }
 
 
+
+import urllib.parse
+import redis
+
+redis_url = os.environ.get('REDIS_URL')
+parsed_url = urllib.parse.urlparse(redis_url)
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [f"rediss://{parsed_url.netloc}"],
         },
     },
 }
