@@ -141,7 +141,7 @@ class GroupKickView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            GroupService.kick_user(kwargs.get('title'), serializer.validated_data['username'])
+            GroupService.kik_member(kwargs.get('title'), serializer.validated_data['username'])
             return Response("user kicked successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))

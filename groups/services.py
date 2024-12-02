@@ -119,8 +119,8 @@ class GroupService:
         user = User.objects.get(username=username)
         
         group = Group.objects.get(title=title)
-        if not group.members.filter(username=username).exists():
-            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
+        if not group.members.filter(username=user.username).exists():
+            raise ValidationError({'detail': 'this user is not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
         group.remove_member(user)
         group.save()
         
