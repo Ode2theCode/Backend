@@ -1,12 +1,15 @@
 import json
 from channels.generic.websocket import WebsocketConsumer
+from channels.layers import get_channel_layer
+
 from asgiref.sync import async_to_sync
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-from .models import Notification
 from authentication.models import User
-
 
 class NotificationConsumer(WebsocketConsumer):
     def connect(self):
@@ -25,13 +28,10 @@ class NotificationConsumer(WebsocketConsumer):
             self.close()
             return
         
-        
-        self.room_group_name = "owner_%s" % user.id
         async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
+            f"user_{user.id}",
             self.channel_name
         )
-        
         
         self.accept()
         
@@ -40,34 +40,28 @@ class NotificationConsumer(WebsocketConsumer):
             access_token = AccessToken(token)
             user_id = access_token['user_id']
             return User.objects.get(id=user_id)
-        except:
+        except (InvalidToken, TokenError, User.DoesNotExist):
             return None
         
     def disconnect(self, close_code):
-        pass
-    
-    def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        notification = text_data_json["notification"]
-        user = self.scope["user"]
-        
-        db_notification = Notification.objects.create(
-            recipient=user,
-            message=notification
+        async_to_sync(self.channel_layer.group_discard)(
+            f"user_{self.scope['user'].id}",
+            self.channel_name
         )
         
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
+    def send_notification(user, message):
+        notification = {
+            'message': message,
+        }
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{user.id}",
             {
-                "type": "notification_message",
-                "notification": db_notification.message
+                'type': 'notify',
+                'notification': notification,
             }
         )
-        
-    
-    def send_notification(self, event):
-        message = event["message"]
-        
-        self.send(text_data=json.dumps({
-            "notification": message
-        }))
+
+    def notify(self, event):
+        notification = event['notification']
+        self.send(text_data=json.dumps(notification, cls=DjangoJSONEncoder))

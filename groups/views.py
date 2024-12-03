@@ -28,7 +28,6 @@ class GroupCreateView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
 
-
 class GroupRetrieveView(APIView):
     serializer_class = GroupRetrieveSerializer
     
@@ -55,6 +54,7 @@ class GroupUpdateView(APIView):
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
+
 class GroupDeleteView(APIView):  
     permission_classes = [IsAuthenticated, IsGroupOwner]  
     def delete(self, request, *args, **kwargs):
@@ -64,7 +64,6 @@ class GroupDeleteView(APIView):
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
-
 
 class GroupJoinRequestView(APIView):
     permission_classes = [IsAuthenticated]
@@ -79,7 +78,8 @@ class GroupJoinRequestView(APIView):
             
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-        
+     
+       
 class GroupCancelRequestView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
@@ -88,16 +88,20 @@ class GroupCancelRequestView(APIView):
             return Response("request cancelled successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-     
+  
+   
 class GroupPendingRequestView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     serializer_class = GroupPendingRequestSerializer
+    pagination_class = PageNumberPagination
     
     def get(self, request, *args, **kwargs):
         try:
-            group = GroupService.pending_requests(kwargs.get('title'))
-            serializer = self.serializer_class(group)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            group_requests = GroupService.pending_requests(kwargs.get('title'))
+            paginator = self.pagination_class()
+            paginated_data = paginator.paginate_queryset(group_requests, request)
+            serializer = self.serializer_class(paginated_data, many=True)
+            return paginator.get_paginated_response(serializer.data)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
@@ -115,8 +119,7 @@ class GroupAcceptRequestView(APIView):
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
        
-        
-        
+          
 class GroupDeclineRequestView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     serializer_class = GroupDeclineRequestSerializer

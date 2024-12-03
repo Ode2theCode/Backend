@@ -4,6 +4,7 @@ from rest_framework import status
 from groups.models import Group
 from authentication.models import User
 from chat.models import Chat
+from notifications.consumers import NotificationConsumer
 from notifications.models import Notification
 
 from channels.layers import get_channel_layer
@@ -36,7 +37,12 @@ class GroupService:
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
-        group = Group.objects.get(title=title)
+        group = Group.objects.get(title=title)      
+        
+        if data.get('description') != "" and data.get('description') != group.description:
+            for member in group.members.all():
+                NotificationConsumer.send_notification(member, f"{member.username} updated the description of {group.title}")
+        
         group.description = data.get('description', group.description)
         group.image = data.get('image', group.image)
         group.level = data.get('level', group.level)
@@ -74,19 +80,11 @@ class GroupService:
             
             group_status = "public"
             message = f"{user.username} joined {group.title}"
-        
-        notification = Notification.objects.create(recipient=group.owner, message=message)
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f"owner_{group.owner.id}",
-            {
-                'type': 'send_notification',
-                'message': message
-            }
-        )
-        
+            
+        NotificationConsumer.send_notification(group.owner, message)
         
         return group_status
+    
     def cancel_join_request(title, user):
         group = Group.objects.get(title=title)
         if not group.pending_members.filter(username=user.username).exists():
@@ -100,7 +98,7 @@ class GroupService:
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         group = Group.objects.get(title=title)
-        return group
+        return group.pending_members.all()
     
     @staticmethod
     def accept_request(title, username):
@@ -112,6 +110,7 @@ class GroupService:
         user = User.objects.get(username=username)
         group = Group.objects.get(title=title)
         group.accept_pending_member(user)
+        NotificationConsumer.send_notification(user, f"your request to join {group.title} has been accepted")
         
     @staticmethod
     def decline_request(title, username):

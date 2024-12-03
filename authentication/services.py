@@ -142,12 +142,13 @@ class UserService:
         
         user = User.objects.get(id=id)
         
-        if not PasswordResetTokenGenerator().check_token(user, token):
+        is_valid = PasswordResetTokenGenerator().check_token(user, token)        
+        if not is_valid:
             raise ValidationError({'detail': 'The reset link is invalid', 'status': status.HTTP_400_BAD_REQUEST})
         
         user.set_password(new_password)
         user.save()
         
         return user
-    
+        
           

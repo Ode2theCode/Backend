@@ -67,10 +67,12 @@ class PasswordResetRequestView(APIView):
  
 class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
-    def post(self, request, uidb64, token):
+    def post(self, request, *args, **kwargs):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+        uidb64 = kwargs.get('uidb64')
+        token = kwargs.get('token')
+        print(uidb64, token)
         try:
             UserService.confirm_reset_password(uidb64, token, serializer.validated_data['password'])
             return Response("password reset successfully", status=status.HTTP_200_OK)
