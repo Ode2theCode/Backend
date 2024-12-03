@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'drf_spectacular',
-    # 'rest_framework_simplejwt.token_blacklist',
     
     'corsheaders',
     'storages',
@@ -177,8 +176,8 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            # "hosts": [f"rediss://{parsed_url.netloc}"],
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [f"rediss://{parsed_url.netloc}"],
+            # "hosts": [("127.0.0.1", 6379)],
         },
     },
 }
