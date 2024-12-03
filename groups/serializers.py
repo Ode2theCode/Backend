@@ -39,10 +39,9 @@ class GroupUpdateSerializer(serializers.ModelSerializer):
 
 
 class GroupPendingRequestSerializer(serializers.ModelSerializer):
-    pending_members = serializers.SerializerMethodField(read_only=True)
     class Meta:
-        model = Group
-        fields = ['pending_members']
+        model = User
+        fields = ['username', 'profile_image', 'level']
         
     def get_pending_members(self, obj):
         return [member.username for member in obj.pending_members.all()]
@@ -62,7 +61,7 @@ class GroupKickSerializer(serializers.Serializer):
 class GroupMemberListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username']
+        fields = ['username', 'profile_image', 'level']
         
     
         

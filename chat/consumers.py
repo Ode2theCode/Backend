@@ -7,10 +7,19 @@ from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
+from groups.models import Group
+from notifications.consumers import NotificationConsumer
+
 from .models import Chat, Message
 from authentication.models import User
 
+from rest_framework.exceptions import PermissionDenied
+from rest_framework import status
+from rest_framework.response import Response
+
 class ChatConsumer(WebsocketConsumer):
+    connected_users = set()
+    
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
@@ -28,14 +37,32 @@ class ChatConsumer(WebsocketConsumer):
             user = self.get_user_from_token(token)
             if user:
                 self.scope['user'] = user
+                self.connected_users.add(user.id)
             else:
+                self.accept()
+                self.send(text_data=json.dumps({
+                    'type': 'error',
+                    'message': 'You are not authenticated'
+                }))
                 self.close()
                 return
         else:
+            self.accept()
+            self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': 'You are not authenticated'
+            }))
             self.close()
             return
         
-        # Join room group
+        if user not in self.chat.group.members.all():
+            self.accept()
+            self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': 'You are not a member of this group'
+            }))
+            self.close()
+        
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name, self.channel_name
         )
@@ -50,7 +77,7 @@ class ChatConsumer(WebsocketConsumer):
 
     
     def get_chat_messages(self):
-        return list(self.chat.messages.all().order_by('timestamp').values(
+        return list(self.chat.messages.all().order_by('-timestamp').values(
             'content', 'sender__username', 'timestamp'
         ))
         
@@ -67,6 +94,7 @@ class ChatConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name, self.channel_name
         )
+        self.connected_users.remove(self.scope["user"].id)
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
@@ -88,6 +116,12 @@ class ChatConsumer(WebsocketConsumer):
                 "timestamp": db_message.timestamp.isoformat(),
             }
         )
+        
+        group_members = Group.objects.get(title=self.room_name).members.exclude(id__in=self.connected_users)
+        print(self.connected_users)
+        for member in group_members:
+            print(member.username)
+            NotificationConsumer.send_notification(member, f"New message in {self.room_name} from {user.username}")
 
     # Receive message from room group
     def chat_message(self, event):
