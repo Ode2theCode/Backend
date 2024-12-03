@@ -79,6 +79,15 @@ class GroupJoinRequestView(APIView):
             
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        
+class GroupCancelRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, *args, **kwargs):
+        try:
+            GroupService.cancel_join_request(kwargs.get('title'), request.user)
+            return Response("request cancelled successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
      
 class GroupPendingRequestView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]

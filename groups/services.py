@@ -4,7 +4,10 @@ from rest_framework import status
 from groups.models import Group
 from authentication.models import User
 from chat.models import Chat
+from notifications.models import Notification
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 class GroupService:
     
@@ -54,15 +57,42 @@ class GroupService:
     @staticmethod
     def join_request(title, user):
         group = Group.objects.get(title=title)
-        if user.level != group.level:
-            raise ValidationError({'detail': 'Your level does not match the group level', 'status': status.HTTP_400_BAD_REQUEST})
+        message = ""
+        group_status = ""
         
         if group.private:
-            group.add_pending_member(user)
-            return "private"
+            if user in group.pending_members.all():
+                raise ValidationError({'detail': 'You have already sent a request to join this group', 'status': status.HTTP_400_BAD_REQUEST})
+            
+            group.add_pending_member(user)            
+            group_status = "private"
+            message = f"{user.username} wants to join {group.title}"
         else:
+            if user in group.members.all():
+                raise ValidationError({'detail': 'You are already a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
             group.add_member(user)
-            return "public"
+            
+            group_status = "public"
+            message = f"{user.username} joined {group.title}"
+        
+        notification = Notification.objects.create(recipient=group.owner, message=message)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"owner_{group.owner.id}",
+            {
+                'type': 'send_notification',
+                'message': message
+            }
+        )
+        
+        
+        return group_status
+    def cancel_join_request(title, user):
+        group = Group.objects.get(title=title)
+        if not group.pending_members.filter(username=user.username).exists():
+            raise ValidationError({'detail': 'You have not sent a request to join this group', 'status': status.HTTP_400_BAD_REQUEST})
+        
+        group.pending_members.remove(user)
     
     @staticmethod
     def pending_requests(title):
