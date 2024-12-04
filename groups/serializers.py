@@ -31,12 +31,6 @@ class GroupRetrieveSerializer(serializers.ModelSerializer):
         return obj.members.count()
 
 
-class GroupUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Group
-        fields = ['title', 'description', 'image', 'level', 'city', 'neighborhood', 'meeting_url', 'private']
-
-
 class GroupPendingRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

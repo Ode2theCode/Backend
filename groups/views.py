@@ -43,13 +43,10 @@ class GroupRetrieveView(APIView):
 class GroupUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    serializer_class = GroupUpdateSerializer
     
     def patch(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
         try:
-            GroupService.update_group(kwargs.get('title'), serializer.validated_data)
+            GroupService.update_group(kwargs.get('title'), request.data)
             return Response("group updated successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))

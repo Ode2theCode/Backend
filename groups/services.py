@@ -12,9 +12,15 @@ from asgiref.sync import async_to_sync
 
 class GroupService:
     
+    VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    
     def check_title(title):
         if Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group title already exists', 'status': status.HTTP_400_BAD_REQUEST})
+        
+    def check_level(level):
+        if level not in GroupService.VALID_LEVELS:
+            raise ValidationError({'detail': f'Invalid level. Please select one of the following: {", ".join(Group.VALID_LEVELS)}', 'status': status.HTTP_400_BAD_REQUEST})
     
     @classmethod
     def create_group(cls, user, data):        
@@ -39,26 +45,39 @@ class GroupService:
         
         group = Group.objects.get(title=title)      
         
-        if data.get('description') != "" and data.get('description') != group.description:
-            for member in group.members.all():
-                NotificationConsumer.send_notification(member, f"{member.username} updated the description of {group.title}")
-        
-        if data.get('title') != "" and data.get('title') != group.title:
+        if 'title' in data and data.get('title') != group.title:
             GroupService.check_title(data.get('title'))
             for member in group.members.all():
                 NotificationConsumer.send_notification(member, f"{group.title} has been renamed to {data.get('title')}")
             group.title = data.get('title')
-            group.save()
+            
+        if 'description' in data and data.get('description') != group.description:
+            for member in group.members.all():
+                NotificationConsumer.send_notification(member, f"{member.username} updated the description of {group.title}")
+            group.description = data.get('description')
         
-        group.description = data.get('description', group.description)
-        group.image = data.get('image', group.image)
-        group.level = data.get('level', group.level)
-        group.city = data.get('city', group.city)
-        group.neighborhood = data.get('neighborhood', group.neighborhood)
-        group.meeting_url = data.get('meeting_url', group.meeting_url)
-        group.private = data.get('private', group.private)
+        if 'level' in data and data.get('level') != group.level:
+            GroupService.check_level(data.get('level'))
+            for member in group.members.all():
+                NotificationConsumer.send_notification(member, f"{group.title} level has been updated to {data.get('level')}")
+            group.level = data.get('level')
+        
+        if 'image' in data and data.get('image') != group.image:
+            group.image = data.get('image')
+        
+        if 'city' in data and data.get('city') != group.city:
+            group.city = data.get('city')
+        
+        if 'neighborhood' in data and data.get('neighborhood') != group.neighborhood:
+            group.neighborhood = data.get('neighborhood')
+        
+        if 'meeting_url' in data and data.get('meeting_url') != group.meeting_url:
+            group.meeting_url = data.get('meeting_url')
+        
+        if 'private' in data and data.get('private') != group.private:
+            group.private = data.get('private')
+        
         group.save()
-        return group
     
     @staticmethod
     def delete_group(title):
