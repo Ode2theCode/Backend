@@ -43,6 +43,13 @@ class GroupService:
             for member in group.members.all():
                 NotificationConsumer.send_notification(member, f"{member.username} updated the description of {group.title}")
         
+        if data.get('title') != "" and data.get('title') != group.title:
+            GroupService.check_title(data.get('title'))
+            for member in group.members.all():
+                NotificationConsumer.send_notification(member, f"{group.title} has been renamed to {data.get('title')}")
+            group.title = data.get('title')
+            group.save()
+        
         group.description = data.get('description', group.description)
         group.image = data.get('image', group.image)
         group.level = data.get('level', group.level)

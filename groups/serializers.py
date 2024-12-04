@@ -35,7 +35,6 @@ class GroupUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['title', 'description', 'image', 'level', 'city', 'neighborhood', 'meeting_url', 'private']
-        read_only_fields = ['title']
 
 
 class GroupPendingRequestSerializer(serializers.ModelSerializer):
