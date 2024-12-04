@@ -62,20 +62,11 @@ class GroupService:
                 NotificationConsumer.send_notification(member, f"{group.title} level has been updated to {data.get('level')}")
             group.level = data.get('level')
         
-        if 'image' in data and data.get('image') != group.image:
-            group.image = data.get('image')
-        
-        if 'city' in data and data.get('city') != group.city:
-            group.city = data.get('city')
-        
-        if 'neighborhood' in data and data.get('neighborhood') != group.neighborhood:
-            group.neighborhood = data.get('neighborhood')
-        
-        if 'meeting_url' in data and data.get('meeting_url') != group.meeting_url:
-            group.meeting_url = data.get('meeting_url')
-        
-        if 'private' in data and data.get('private') != group.private:
-            group.private = data.get('private')
+        group.image = data.get("image", group.image)
+        group.private = data.get("private", group.private)
+        group.meeting_url = data.get("meeting_url", group.meeting_url)
+        group.neighborhood = data.get("neighborhood", group.neighborhood)
+        group.city = data.get("city", group.city)
         
         group.save()
     

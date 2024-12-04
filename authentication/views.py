@@ -113,20 +113,13 @@ class UserDeleteView(APIView):
 
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class= UserUpdateSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def patch(self, request):
         try:
             user = request.user
-            serializer = self.serializer_class(user, data = request.data, partial=True)
-        
-            if serializer.is_valid():
-                UserService.update_user(user, serializer.validated_data)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+            UserService.update_user(user, request.data)
+            return Response("user updated successfully", status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response("user not found", status=status.HTTP_404_NOT_FOUND)
 
