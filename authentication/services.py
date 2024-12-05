@@ -135,7 +135,7 @@ class UserService:
         uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
         token = PasswordResetTokenGenerator().make_token(user)
         
-        absolute_url = f'https://localhost:5173/reset-password/{uidb64}/{token}'
+        absolute_url = f'http://localhost:5173/reset-password/{uidb64}/{token}'
         
         email_subject = 'Reset your password'
         email_body = f'Click the link below to reset your password\n{absolute_url}'
