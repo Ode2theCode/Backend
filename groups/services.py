@@ -88,6 +88,7 @@ class GroupService:
                 raise ValidationError({'detail': 'You have already sent a request to join this group', 'status': status.HTTP_400_BAD_REQUEST})
             if user in group.members.all():
                 raise ValidationError({'detail': 'You are already a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
+            
             group.add_pending_member(user)            
             group_status = "private"
             message = f"{user.username} wants to join {group.title}"
