@@ -86,7 +86,8 @@ class GroupService:
         if group.private:
             if user in group.pending_members.all():
                 raise ValidationError({'detail': 'You have already sent a request to join this group', 'status': status.HTTP_400_BAD_REQUEST})
-            
+            if user in group.members.all():
+                raise ValidationError({'detail': 'You are already a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
             group.add_pending_member(user)            
             group_status = "private"
             message = f"{user.username} wants to join {group.title}"
@@ -155,12 +156,15 @@ class GroupService:
         group.save()
     
     @staticmethod
-    def kik_member(title, username):
+    def kick_member(title, username):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         if not User.objects.filter(username=username).exists():
             raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if username == Group.objects.get(title=title).owner.username:
+            raise ValidationError({'detail': 'You cannot kik the owner of the group', 'status': status.HTTP_400_BAD_REQUEST})
         
         user = User.objects.get(username=username)
         
