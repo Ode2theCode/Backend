@@ -35,6 +35,7 @@ class GroupSerializer(serializers.ModelSerializer):
         
     def get_member_count(self, obj):
         return obj.members.count()
+
         
 
         

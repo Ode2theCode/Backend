@@ -93,6 +93,7 @@ class UserTimeSlotCreateView(APIView):
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+
         
 class UserTimeSlotListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -117,6 +118,7 @@ class UserTimeSlotDeleteView(APIView):
 
 
 
+
 class GroupTimeSlotCreateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
@@ -133,6 +135,7 @@ class GroupTimeSlotCreateView(APIView):
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+
 
 
 class GroupTimeSlotListView(APIView):
@@ -156,6 +159,7 @@ class GroupTimeSlotDeleteView(APIView):
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
        
+
     
 from django.db import connection
 from django.http import JsonResponse

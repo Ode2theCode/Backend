@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'drf_spectacular',
+
     
     'corsheaders',
     'storages',
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
     'authentication',
     'groups',
     'home',
+
     'chat',
     'notifications',
 
@@ -162,6 +164,7 @@ STORAGES = {
   "staticfiles": {
       "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
   },
+
 }
 
 

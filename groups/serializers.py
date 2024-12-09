@@ -9,6 +9,7 @@ class GroupCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['title', 'description', 'level', 'city', 'neighborhood', 'meeting_url', 'private']
+
     
 
 class GroupRetrieveSerializer(serializers.ModelSerializer):
@@ -20,6 +21,7 @@ class GroupRetrieveSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'image', 'level', 'city', 'neighborhood', 
                   'created_at', 'meeting_url', 'private', 
                   'owner_username', 'member_usernames', 'number_of_members']
+
 
     def get_owner_username(self, obj):
         return obj.owner.username if obj.owner else None
@@ -42,12 +44,10 @@ class GroupPendingRequestSerializer(serializers.ModelSerializer):
 
 class GroupAcceptRequestSerializer(serializers.Serializer):
     username = serializers.CharField()
-    
 
 class GroupDeclineRequestSerializer(serializers.Serializer):
     username = serializers.CharField()
-    
-
+   
 class GroupKickSerializer(serializers.Serializer):
     username = serializers.CharField()
     
@@ -56,5 +56,5 @@ class GroupMemberListSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'profile_image', 'level']
         
-    
+ 
         
