@@ -1,18 +1,23 @@
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Q
 
 from rest_framework.exceptions import ValidationError
+from rest_framework import status
+
 
 from .models import *
 from groups.models import *
+
+from .filters import GroupFilter
 
 class UserTimeSlotService:
     @staticmethod
     def validate_time_range(start_time: float, end_time: float) -> None:
         if not (0 <= start_time <= 24 and 0 <= end_time <= 24):
-            raise ValidationError('Time must be between 0 and 24')
+            raise ValidationError({'detail': 'Time must be between 0 and 24', 'status': status.HTTP_400_BAD_REQUEST})
             
         if end_time <= start_time:
-            raise ValidationError('End time must be after start time')
+            raise ValidationError({'detail': 'End time must be after start time', 'status': status.HTTP_400_BAD_REQUEST})
+
 
     @staticmethod
     def validate_overlap(user, day_of_week: str, start_time: float, end_time: float) -> None:
@@ -25,7 +30,8 @@ class UserTimeSlotService:
         )
         
         if overlapping.exists():
-            raise ValidationError('This time slot overlaps with an existing slot')
+            raise ValidationError({'detail': 'This time slot overlaps with an existing slot', 'status': status.HTTP_400_BAD_REQUEST})
+
 
     @classmethod
     def create_time_slot(cls, user, day_of_week: str, start_time: float, end_time: float) -> UserTimeSlot:
@@ -53,7 +59,8 @@ class UserTimeSlotService:
         ).first()
         
         if not time_slot:
-            raise ValidationError('Time slot not found')
+            raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
+
             
         time_slot.delete()
     
@@ -63,10 +70,10 @@ class GroupTimeSlotService:
     @staticmethod
     def validate_time_range(start_time: float, end_time: float) -> None:
         if not (0 <= start_time <= 24 and 0 <= end_time <= 24):
-            raise ValidationError('Time must be between 0 and 24')
+            raise ValidationError({'detail': 'Time must be between 0 and 24', 'status': status.HTTP_400_BAD_REQUEST})
             
         if end_time <= start_time:
-            raise ValidationError('End time must be after start time')
+            raise ValidationError({'detail': 'End time must be after start time', 'status': status.HTTP_400_BAD_REQUEST})
 
     @staticmethod
     def validate_overlap(group, day_of_week: str, start_time: float, end_time: float) -> None:
@@ -79,7 +86,8 @@ class GroupTimeSlotService:
         )
         
         if overlapping.exists():
-            raise ValidationError('This time slot overlaps with an existing slot')
+            raise ValidationError({'detail': 'This time slot overlaps with an existing slot', 'status': status.HTTP_400_BAD_REQUEST})
+
 
     @classmethod
     def create_group_time_slot(cls, group, day_of_week: str, start_time: float, end_time: float) -> GroupTimeSlot:
@@ -107,12 +115,23 @@ class GroupTimeSlotService:
         ).first()
         
         if not time_slot:
-            raise ValidationError('Time slot not found')
+            raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
+
             
         time_slot.delete()
     
     
     
+class HomeService:
+    def get_joined_groups(user, request) -> list[Group]:
+        queryset = Group.objects.filter(members=user)
+        
+        search_term = request.GET.get('search')
+        if search_term:
+            queryset = queryset.filter(title__icontains=search_term)
+        
+        return queryset
+
     
 class SuggestionService:
     
@@ -132,9 +151,15 @@ class SuggestionService:
                         if overlap > 0:
                             total_overlap += overlap
 
-            if total_overlap > 0:
-                group_matches.append((group, total_overlap))
+            # if total_overlap > 0:
+            group_matches.append((group, total_overlap))
                 
         group_matches.sort(key=lambda x: x[1], reverse=True)
-        
+        group_matches = [group[0] for group in group_matches]
         return group_matches
+    
+
+class AllGroupsService:
+    @staticmethod
+    def get_all_groups() -> QuerySet[Group]:
+        return Group.objects.all()

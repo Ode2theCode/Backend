@@ -1,22 +1,81 @@
+from django.db.models import Count
+
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 from .serializers import *
 from .services import *
 from groups.models import*
 from .permissions import *
+from .filters import *
 
 class HomeView(APIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = HomeSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [SearchFilter]
+    search_fields = ['title']
     
     def get(self, request):
-        if request.user.is_authenticated:    
-            serializer = self.serializer_class(request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response("landing page", status=status.HTTP_200_OK)
+        joined_groups = HomeService.get_joined_groups(request.user, request)
+        filtered_groups = self.filter_queryset(joined_groups)
+        paginator = self.pagination_class()
+        paginated_data = paginator.paginate_queryset(filtered_groups, request)
+        serializer = self.serializer_class(paginated_data, many=True)
+        
+        return paginator.get_paginated_response(serializer.data)
+    
+    def filter_queryset(self, queryset):
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
+
+
+class SuggestionsView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SuggestionSerializer
+    pagination_class = PageNumberPagination
+    
+    def get(self, request):
+        suggestions = SuggestionService.get_suggestions(request.user)
+        paginator = self.pagination_class()
+        paginated_data = paginator.paginate_queryset(suggestions, request)
+        serializer = self.serializer_class(paginated_data, many=True)
+        return paginator.get_paginated_response(serializer.data)
+    
+
+class AllGroupsView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupSerializer
+    pagination_class = PageNumberPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = GroupFilter
+    search_fields = ['title']
+    ordering_fields = ['level', 'member_count']
+    
+    def get(self, request):
+        groups = AllGroupsService.get_all_groups()
+        groups = groups.annotate(member_count=Count('members'))
+        filtered_groups = self.filter_queryset(groups)
+        paginator = self.pagination_class()
+        paginated_data = paginator.paginate_queryset(filtered_groups, request)
+        serializer = self.serializer_class(paginated_data, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def filter_queryset(self, queryset):
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
+    
+
         
 class UserTimeSlotCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -33,7 +92,8 @@ class UserTimeSlotCreateView(APIView):
             )
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+
         
 class UserTimeSlotListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -50,8 +110,12 @@ class UserTimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated]
     
     def delete(self, request, *args, **kwargs):
-        UserTimeSlotService.delete_time_slot(request.user, kwargs.get('id'))
-        return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+        try:
+            UserTimeSlotService.delete_time_slot(request.user, kwargs.get('id'))
+            return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+
 
 
 
@@ -70,7 +134,8 @@ class GroupTimeSlotCreateView(APIView):
             )
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
-            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+
 
 
 class GroupTimeSlotListView(APIView):
@@ -88,22 +153,13 @@ class GroupTimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
     def delete(self, request, *args, **kwargs):
-        GroupTimeSlotService.delete_group_time_slot(request.user, kwargs.get('id'))
-        return Response("time slot deleted successfully", status=status.HTTP_200_OK)
-    
-    
-class SuggestionsView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    serializer_class = SuggestionSerializer
-    
-    def get(self, requst):
-        suggestions = SuggestionService.get_suggestions(requst.user)
-        serializer = self.serializer_class(suggestions, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    
-   
+        try:
+            GroupTimeSlotService.delete_group_time_slot(request.user, kwargs.get('id'))
+            return Response("time slot deleted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+       
+
     
 from django.db import connection
 from django.http import JsonResponse

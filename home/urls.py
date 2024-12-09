@@ -4,6 +4,8 @@ from .views import *
 urlpatterns = [
     path('', HomeView.as_view()),
     path('suggestions/', SuggestionsView.as_view()),
+    path('all-groups/', AllGroupsView.as_view()),
+
     
     path('user-time-slots/create/', UserTimeSlotCreateView.as_view()),
     path('user-time-slots/', UserTimeSlotListView.as_view()),
