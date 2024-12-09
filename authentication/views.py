@@ -72,7 +72,6 @@ class PasswordResetConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         uidb64 = kwargs.get('uidb64')
         token = kwargs.get('token')
-        print(uidb64, token)
         try:
             UserService.confirm_reset_password(uidb64, token, serializer.validated_data['password'])
             return Response("password reset successfully", status=status.HTTP_200_OK)
@@ -113,20 +112,13 @@ class UserDeleteView(APIView):
 
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class= UserUpdateSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def patch(self, request):
         try:
             user = request.user
-            serializer = self.serializer_class(user, data = request.data, partial=True)
-        
-            if serializer.is_valid():
-                UserService.update_user(user, serializer.validated_data)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+            UserService.update_user(user, request.data)
+            return Response("user updated successfully", status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response("user not found", status=status.HTTP_404_NOT_FOUND)
 

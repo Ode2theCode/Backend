@@ -12,9 +12,15 @@ from asgiref.sync import async_to_sync
 
 class GroupService:
     
+    VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    
     def check_title(title):
         if Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group title already exists', 'status': status.HTTP_400_BAD_REQUEST})
+        
+    def check_level(level):
+        if level not in GroupService.VALID_LEVELS:
+            raise ValidationError({'detail': f'Invalid level. Please select one of the following: {", ".join(Group.VALID_LEVELS)}', 'status': status.HTTP_400_BAD_REQUEST})
     
     @classmethod
     def create_group(cls, user, data):        
@@ -39,19 +45,30 @@ class GroupService:
         
         group = Group.objects.get(title=title)      
         
-        if data.get('description') != "" and data.get('description') != group.description:
+        if 'title' in data and data.get('title') != group.title:
+            GroupService.check_title(data.get('title'))
+            for member in group.members.all():
+                NotificationConsumer.send_notification(member, f"{group.title} has been renamed to {data.get('title')}")
+            group.title = data.get('title')
+            
+        if 'description' in data and data.get('description') != group.description:
             for member in group.members.all():
                 NotificationConsumer.send_notification(member, f"{member.username} updated the description of {group.title}")
+            group.description = data.get('description')
         
-        group.description = data.get('description', group.description)
-        group.image = data.get('image', group.image)
-        group.level = data.get('level', group.level)
-        group.city = data.get('city', group.city)
-        group.neighborhood = data.get('neighborhood', group.neighborhood)
-        group.meeting_url = data.get('meeting_url', group.meeting_url)
-        group.private = data.get('private', group.private)
+        if 'level' in data and data.get('level') != group.level:
+            GroupService.check_level(data.get('level'))
+            for member in group.members.all():
+                NotificationConsumer.send_notification(member, f"{group.title} level has been updated to {data.get('level')}")
+            group.level = data.get('level')
+        
+        group.image = data.get("image", group.image)
+        group.private = data.get("private", group.private)
+        group.meeting_url = data.get("meeting_url", group.meeting_url)
+        group.neighborhood = data.get("neighborhood", group.neighborhood)
+        group.city = data.get("city", group.city)
+        
         group.save()
-        return group
     
     @staticmethod
     def delete_group(title):
@@ -69,6 +86,8 @@ class GroupService:
         if group.private:
             if user in group.pending_members.all():
                 raise ValidationError({'detail': 'You have already sent a request to join this group', 'status': status.HTTP_400_BAD_REQUEST})
+            if user in group.members.all():
+                raise ValidationError({'detail': 'You are already a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
             
             group.add_pending_member(user)            
             group_status = "private"
@@ -138,12 +157,15 @@ class GroupService:
         group.save()
     
     @staticmethod
-    def kik_member(title, username):
+    def kick_member(title, username):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         if not User.objects.filter(username=username).exists():
             raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if username == Group.objects.get(title=title).owner.username:
+            raise ValidationError({'detail': 'You cannot kik the owner of the group', 'status': status.HTTP_400_BAD_REQUEST})
         
         user = User.objects.get(username=username)
         

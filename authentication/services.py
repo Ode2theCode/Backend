@@ -75,8 +75,18 @@ class UserService:
     
     @classmethod
     def update_user(cls, user, data):
-        user.level = data.get('level', user.level)
-        cls.check_level(user.level)
+        
+        if 'username' in data and user.username != data.get('username'):
+            UserService.check_username(data.get('username'))
+            user.username = data.get('username')
+        
+        if 'level' in data and user.level != data.get('level'):
+            cls.check_level(data.get('level'))
+            user.level = data.get('level')
+        
+        
+        
+
         user.city = data.get('city', user.city)
         user.neighborhood = data.get('neighborhood', user.neighborhood)
         user.profile_image = data.get('profile_image', user.profile_image)
@@ -125,7 +135,7 @@ class UserService:
         uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
         token = PasswordResetTokenGenerator().make_token(user)
         
-        absolute_url = f'https://localhost:5173/reset-password/{uidb64}/{token}'
+        absolute_url = f'http://localhost:5173/reset-password/{uidb64}/{token}'
         
         email_subject = 'Reset your password'
         email_body = f'Click the link below to reset your password\n{absolute_url}'

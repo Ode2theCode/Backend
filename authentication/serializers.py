@@ -54,12 +54,6 @@ class UserDeleteSerializer(serializers.ModelSerializer):
         fields = ['password']
         
 
-class UserUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['level', 'city', 'neighborhood', 'profile_image']
-        
-
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(min_length=8, max_length=64, write_only=True)
     new_password = serializers.CharField(min_length=8, max_length=64, write_only=True)

@@ -144,11 +144,11 @@ class SuggestionService:
                         if overlap > 0:
                             total_overlap += overlap
 
-            if total_overlap > 0:
-                group_matches.append((group, total_overlap))
+            # if total_overlap > 0:
+            group_matches.append((group, total_overlap))
                 
         group_matches.sort(key=lambda x: x[1], reverse=True)
-        
+        group_matches = [group[0] for group in group_matches]
         return group_matches
     
 

@@ -16,5 +16,5 @@ urlpatterns = [
     path('<str:title>/pending/', GroupPendingRequestView.as_view()),
     path('<str:title>/accept/', GroupAcceptRequestView.as_view()),
     path('<str:title>/decline/', GroupDeclineRequestView.as_view()),
-    path('<str:title>/kik/', GroupKickView.as_view()),
+    path('<str:title>/kick/', GroupKickView.as_view()),
 ]
