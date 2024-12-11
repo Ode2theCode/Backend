@@ -118,9 +118,7 @@ class ChatConsumer(WebsocketConsumer):
         )
         
         group_members = Group.objects.get(title=self.room_name).members.exclude(id__in=self.connected_users)
-        print(self.connected_users)
         for member in group_members:
-            print(member.username)
             NotificationConsumer.send_notification(member, f"New message in {self.room_name} from {user.username}")
 
     # Receive message from room group
