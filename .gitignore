@@ -5,5 +5,4 @@ venv/
 Dockerfile
 docker-compose.yml
 .Dockerignore
-.coverage
 .env.docker
