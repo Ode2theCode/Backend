@@ -104,14 +104,16 @@ class GroupTimeSlotService:
 
         return time_slot
         
-    def get_group_time_slots(group) -> QuerySet[GroupTimeSlot]:
+    def get_group_time_slots(title) -> QuerySet[GroupTimeSlot]:
+        group = Group.objects.get(title=title)
         return GroupTimeSlot.objects.filter(group=group)
     
     @staticmethod
-    def delete_time_slot(user, time_slot_id: int) -> None:
+    def delete_time_slot(title, time_slot_id: int) -> None:
+        group = Group.objects.get(title=title)
         time_slot = GroupTimeSlot.objects.filter(
             id=time_slot_id,
-            user=user
+            group=group
         ).first()
         
         if not time_slot:
