@@ -11,6 +11,7 @@ urlpatterns = [
     path('<str:title>/join/', GroupJoinRequestView.as_view(), name='join-group'),
     path('<str:title>/cancel/', GroupCancelRequestView.as_view(), name='cancel-join-request'),
     path('<str:title>/leave/', GroupLeaveView.as_view(), name='leave-group'),
+
     
     path('<str:title>/members/', GroupMemberListView.as_view(), name='retrieve-members'),
     path('<str:title>/pending/', GroupPendingRequestView.as_view(), name='retrieve-pending-members'),

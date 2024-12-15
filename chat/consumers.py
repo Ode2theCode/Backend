@@ -29,31 +29,15 @@ class ChatConsumer(WebsocketConsumer):
         except Chat.DoesNotExist:
             self.close()
             
-        headers = dict(self.scope['headers'])
-        auth_header = headers.get(b'authorization', b'').decode()
         
-        if auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
-            user = self.get_user_from_token(token)
-            if user:
-                self.scope['user'] = user
-                self.connected_users.add(user.id)
-            else:
-                self.accept()
-                self.send(text_data=json.dumps({
-                    'type': 'error',
-                    'message': 'You are not authenticated'
-                }))
-                self.close()
-                return
-        else:
-            self.accept()
-            self.send(text_data=json.dumps({
-                'type': 'error',
-                'message': 'You are not authenticated'
-            }))
+        token = self.scope['url_route']['kwargs']['token']
+        user = self.get_user_from_token(token)
+        
+        if not user:
             self.close()
-            return
+        
+        self.scope['user'] = user
+        self.connected_users.add(user.id)
         
         if user not in self.chat.group.members.all():
             self.accept()

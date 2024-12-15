@@ -27,6 +27,9 @@ class UserLoginSerializer(serializers.ModelSerializer):
         
         
         
+class UserLogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+        
 class PasswordResetRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     class Meta:

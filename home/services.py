@@ -3,6 +3,7 @@ from django.db.models import QuerySet, Q
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
+
 from .models import *
 from groups.models import *
 
@@ -17,6 +18,7 @@ class UserTimeSlotService:
         if end_time <= start_time:
             raise ValidationError({'detail': 'End time must be after start time', 'status': status.HTTP_400_BAD_REQUEST})
 
+
     @staticmethod
     def validate_overlap(user, day_of_week: str, start_time: float, end_time: float) -> None:
         
@@ -29,6 +31,7 @@ class UserTimeSlotService:
         
         if overlapping.exists():
             raise ValidationError({'detail': 'This time slot overlaps with an existing slot', 'status': status.HTTP_400_BAD_REQUEST})
+
 
     @classmethod
     def create_time_slot(cls, user, day_of_week: str, start_time: float, end_time: float) -> UserTimeSlot:
@@ -57,6 +60,7 @@ class UserTimeSlotService:
         
         if not time_slot:
             raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
+
             
         time_slot.delete()
     
@@ -83,6 +87,7 @@ class GroupTimeSlotService:
         
         if overlapping.exists():
             raise ValidationError({'detail': 'This time slot overlaps with an existing slot', 'status': status.HTTP_400_BAD_REQUEST})
+
 
     @classmethod
     def create_group_time_slot(cls, group, day_of_week: str, start_time: float, end_time: float) -> GroupTimeSlot:
@@ -113,6 +118,7 @@ class GroupTimeSlotService:
         
         if not time_slot:
             raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
+
             
         time_slot.delete()
     
@@ -127,6 +133,7 @@ class HomeService:
             queryset = queryset.filter(title__icontains=search_term)
         
         return queryset
+
     
 class SuggestionService:
     

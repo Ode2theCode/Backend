@@ -18,6 +18,7 @@ class Group(models.Model):
     def add_pending_member(self, user):
         self.pending_members.add(user)
     
+
     def accept_pending_member(self, user):
         self.members.add(user)
         self.pending_members.remove(user)

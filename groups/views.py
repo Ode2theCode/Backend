@@ -13,6 +13,7 @@ from .permissions import *
 from .services import *
 
 
+
 class GroupCreateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupCreateSerializer
@@ -40,6 +41,7 @@ class GroupRetrieveView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 
+
 class GroupUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -52,6 +54,7 @@ class GroupUpdateView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
 
 
+
 class GroupDeleteView(APIView):  
     permission_classes = [IsAuthenticated, IsGroupOwner]  
     def delete(self, request, *args, **kwargs):
@@ -61,7 +64,6 @@ class GroupDeleteView(APIView):
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
-
 class GroupJoinRequestView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -129,6 +131,7 @@ class GroupDeclineRequestView(APIView):
             return Response("request accepted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+
         
 
 class GroupLeaveView(APIView):
@@ -140,6 +143,7 @@ class GroupLeaveView(APIView):
             return Response("group left successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+
         
 
 class GroupKickView(APIView):
@@ -172,7 +176,3 @@ class GroupMemberListView(APIView):
             return paginator.get_paginated_response(serializer.data)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-        
-        
-        
-        

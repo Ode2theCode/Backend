@@ -27,6 +27,7 @@ class Migration(migrations.Migration):
         ),
         migrations.CreateModel(
             name='UserTimeSlot',
+
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('day_of_week', models.CharField(max_length=255)),

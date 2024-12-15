@@ -13,20 +13,13 @@ from authentication.models import User
 
 class NotificationConsumer(WebsocketConsumer):
     def connect(self):
-        headers = dict(self.scope['headers'])
-        auth_header = headers.get(b'authorization', b'').decode()
+        token = self.scope['url_route']['kwargs']['token']
+        user = self.get_user_from_token(token)
         
-        if auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
-            user = self.get_user_from_token(token)
-            if user:
-                self.scope['user'] = user
-            else:
-                self.close()
-                return
-        else:
-            self.close()
-            return
+        if not user:
+            self.close(403)
+        
+        self.scope['user'] = user
         
         async_to_sync(self.channel_layer.group_add)(
             f"user_{user.id}",
