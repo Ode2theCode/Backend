@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'storages',
     'django_filters',
     'channels',
+    'django_prometheus',
     
     'authentication',
     'groups',
@@ -43,6 +44,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
   
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
