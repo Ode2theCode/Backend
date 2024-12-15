@@ -4,6 +4,5 @@ venv/
 **/__pycache__/
 Dockerfile
 docker-compose.yml
-.env.docker
-.coverage
 .Dockerignore
+.env.docker
