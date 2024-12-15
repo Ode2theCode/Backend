@@ -144,9 +144,12 @@ class GroupTimeSlotListView(APIView):
     serializer_class = GroupTimeSlotSerializer
     
     def get(self, request, *args, **kwargs):
-        time_slots = GroupTimeSlotService.get_group_time_slots(kwargs.get('title'))
-        serializer = self.serializer_class(time_slots, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            time_slots = GroupTimeSlotService.get_group_time_slots(kwargs.get('title'))
+            serializer = self.serializer_class(time_slots, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
     
 
 class GroupTimeSlotDeleteView(APIView):
