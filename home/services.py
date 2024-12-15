@@ -105,11 +105,15 @@ class GroupTimeSlotService:
         return time_slot
         
     def get_group_time_slots(title) -> QuerySet[GroupTimeSlot]:
+        if not Group.objects.filter(title=title).exists():
+            raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         group = Group.objects.get(title=title)
         return GroupTimeSlot.objects.filter(group=group)
     
     @staticmethod
     def delete_time_slot(title, time_slot_id: int) -> None:
+        if not Group.objects.filter(title=title).exists():
+            raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         group = Group.objects.get(title=title)
         time_slot = GroupTimeSlot.objects.filter(
             id=time_slot_id,
