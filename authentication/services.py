@@ -189,7 +189,10 @@ class UserService:
             for member in group.members.all():
                 NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
             group.delete()
-        cls.delete_s3_object(user.profile_image.name)
+            
+        if user.profile_image:
+            cls.delete_s3_object(user.profile_image.name)
+        
         user.delete()
         
         
