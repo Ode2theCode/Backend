@@ -5,9 +5,10 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import EmailMessage
 
-
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
+
+import boto3
 
 from .models import *
 from .utils import send_otp_email
@@ -16,6 +17,16 @@ from FD import settings
 
 class UserService:
     VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'a1', 'a2', 'b1', 'b2', 'c1', 'c2']
+    
+    @staticmethod
+    def delete_s3_object(file_path):
+        s3 = boto3.client('s3',
+                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                          endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        )
+        s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_path)
+        
 
     
     @staticmethod
@@ -84,12 +95,21 @@ class UserService:
             cls.check_level(data.get('level'))
             user.level = data.get('level')
         
+        if not user.profile_image and data.get('profile_image'):
+            path = data.get('profile_image').name + f'_{user.id}'
+            user.profile_image.save(path, data.get('profile_image'))
         
+        if user.profile_image and not data.get('profile_image'):
+            cls.delete_s3_object(user.profile_image.name)
+            user.profile_image = None
         
-
+        if user.profile_image and data.get('profile_image') and user.profile_image != data.get('profile_image'):
+            cls.delete_s3_object(user.profile_image.name)
+            path = data.get('profile_image').name + f'_{user.id}'
+            user.profile_image.save(path, data.get('profile_image'))
+            
         user.city = data.get('city', user.city)
         user.neighborhood = data.get('neighborhood', user.neighborhood)
-        user.profile_image = data.get('profile_image', user.profile_image)
         user.save()
         return user
     
