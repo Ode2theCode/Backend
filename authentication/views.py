@@ -4,8 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-
 from rest_framework.permissions import IsAuthenticated
+
+from silk.profiling.profiler import silk_profile
 
 from .serializers import *
 from .models import *
@@ -42,6 +43,7 @@ class VerifyEmailView(APIView):
 class LoginUserView(APIView):
     serializer_class = UserLoginSerializer
     
+    @silk_profile(name='login')
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
