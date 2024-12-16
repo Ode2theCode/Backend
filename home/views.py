@@ -9,7 +9,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 from django_filters.rest_framework import DjangoFilterBackend
-
+from silk.profiling.profiler import silk_profile
 
 from .serializers import *
 from .services import *
@@ -24,6 +24,7 @@ class HomeView(APIView):
     filter_backends = [SearchFilter]
     search_fields = ['title']
     
+    @silk_profile(name='my-groups')
     def get(self, request):
         joined_groups = HomeService.get_joined_groups(request.user, request)
         filtered_groups = self.filter_queryset(joined_groups)
@@ -44,6 +45,7 @@ class SuggestionsView(APIView):
     serializer_class = SuggestionSerializer
     pagination_class = PageNumberPagination
     
+    @silk_profile(name='suggestions')
     def get(self, request):
         suggestions = SuggestionService.get_suggestions(request.user)
         paginator = self.pagination_class()
@@ -61,6 +63,7 @@ class AllGroupsView(APIView):
     search_fields = ['title']
     ordering_fields = ['level', 'member_count']
     
+    @silk_profile(name='all-groups')
     def get(self, request):
         groups = AllGroupsService.get_all_groups()
         groups = groups.annotate(member_count=Count('members'))
@@ -78,10 +81,10 @@ class AllGroupsView(APIView):
 
         
 class UserTimeSlotCreateView(APIView):
-    permission_classes = [IsAuthenticated]
-    
+    permission_classes = [IsAuthenticated] 
     serializer_class = UserTimeSlotSerializer
     
+    @silk_profile(name='create-user-time-slot')
     def post(self, request):
         serializer = self.serializer_class(data=request.data)     
         serializer.is_valid(raise_exception=True)
@@ -97,9 +100,9 @@ class UserTimeSlotCreateView(APIView):
         
 class UserTimeSlotListView(APIView):
     permission_classes = [IsAuthenticated]
-    
     serializer_class = UserTimeSlotSerializer
     
+    @silk_profile(name='user-time-slots-retrieve')
     def get(self, request):
         time_slots = UserTimeSlotService.get_user_time_slots(request.user)
         serializer = self.serializer_class(time_slots, many=True)
@@ -109,6 +112,7 @@ class UserTimeSlotListView(APIView):
 class UserTimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated]
     
+    @silk_profile(name='user-time-slot-delete')
     def delete(self, request, *args, **kwargs):
         try:
             UserTimeSlotService.delete_time_slot(request.user, kwargs.get('id'))
@@ -121,9 +125,9 @@ class UserTimeSlotDeleteView(APIView):
 
 class GroupTimeSlotCreateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
-    
     serializer_class = GroupTimeSlotSerializer
     
+    @silk_profile(name='create-group-time-slot')
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)     
         serializer.is_valid(raise_exception=True)
@@ -140,9 +144,9 @@ class GroupTimeSlotCreateView(APIView):
 
 class GroupTimeSlotListView(APIView):
     permission_classes = [IsAuthenticated]
-    
     serializer_class = GroupTimeSlotSerializer
     
+    @silk_profile(name='group-time-slots-retrieve')
     def get(self, request, *args, **kwargs):
         try:
             time_slots = GroupTimeSlotService.get_group_time_slots(kwargs.get('title'))
@@ -155,6 +159,7 @@ class GroupTimeSlotListView(APIView):
 class GroupTimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
+    @silk_profile(name='group-time-slot-delete')
     def delete(self, request, *args, **kwargs):
         try:
             GroupTimeSlotService.delete_time_slot(kwargs.get('title'), kwargs.get('id'))

@@ -4,8 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-
 from rest_framework.permissions import IsAuthenticated
+
+from silk.profiling.profiler import silk_profile
 
 from .serializers import *
 from .models import *
@@ -14,6 +15,7 @@ from .services import *
 class RegisterUserView(APIView):
     serializer_class = UserCreateSerializer
     
+    @silk_profile(name='register')
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -27,6 +29,7 @@ class RegisterUserView(APIView):
 class VerifyEmailView(APIView):
     serializer_class = VerifyEmailSerializer
     
+    @silk_profile(name='verify-email')
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -42,6 +45,7 @@ class VerifyEmailView(APIView):
 class LoginUserView(APIView):
     serializer_class = UserLoginSerializer
     
+    @silk_profile(name='login')
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -55,6 +59,7 @@ class LoginUserView(APIView):
 class PasswordResetRequestView(APIView):
     serializer_class = PasswordResetRequestSerializer
     
+    @silk_profile(name='forget-password')
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -68,6 +73,8 @@ class PasswordResetRequestView(APIView):
  
 class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
+    
+    @silk_profile(name='forget-password-confirm')
     def post(self, request, *args, **kwargs):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -85,6 +92,7 @@ class UserRetriveView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class= UserRetriveSerializer
     
+    @silk_profile(name='user-retrive')
     def get(self, request):
         user = request.user
         
@@ -97,6 +105,7 @@ class UserDeleteView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class= UserDeleteSerializer
     
+    @silk_profile(name='user-delete')
     def delete(self, request):
         
         user = request.user
@@ -115,6 +124,7 @@ class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
+    @silk_profile(name='user-update')
     def patch(self, request):
         try:
             user = request.user
@@ -127,6 +137,7 @@ class UserUpdateView(APIView):
 class ChangePasswordView(APIView):
     serializer_class= ChangePasswordSerializer
     
+    @silk_profile(name='change-password')
     def patch(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     'storages',
     'django_filters',
     'channels',
+    'django_prometheus',
+    'silk',
     
     'authentication',
     'groups',
@@ -42,7 +44,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    
   
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -51,6 +55,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    'silk.middleware.SilkyMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -199,3 +206,5 @@ sentry_sdk.init(
         "continuous_profiling_auto_start": True,
     },
 )
+
+SILKY_PYTHON_PROFILER = True
