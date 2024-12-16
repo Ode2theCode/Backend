@@ -7,12 +7,26 @@ from chat.models import Chat
 from notifications.consumers import NotificationConsumer
 from notifications.models import Notification
 
+import boto3
+
+from FD import settings
+
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 class GroupService:
     
     VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+    
+    @staticmethod
+    def delete_s3_object(file_path):
+        s3 = boto3.client('s3',
+                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                          endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        )
+        s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_path)
+        
     
     def check_title(title):
         if Group.objects.filter(title=title).exists():
@@ -62,7 +76,23 @@ class GroupService:
                 NotificationConsumer.send_notification(member, f"{group.title} level has been updated to {data.get('level')}")
             group.level = data.get('level')
         
-        group.image = data.get("image", group.image)
+        print(data.get('image'))
+        if not group.image and data.get('image'):
+            print(1)
+            path = data.get('image').name + f'_{group.id}'
+            group.image.save(path, data.get('image'))
+        
+        if group.image and not data.get('image'):
+            print(2)
+            GroupService.delete_s3_object(group.image.name)
+            group.image = None
+        
+        if group.image and data.get('image') and group.image != data.get('image'):
+            print(3)
+            GroupService.delete_s3_object(group.image.name)
+            path = data.get('image').name + f'_{group.id}'
+            group.image.save(path, data.get('image'))
+            
         group.private = data.get("private", group.private)
         group.meeting_url = data.get("meeting_url", group.meeting_url)
         group.neighborhood = data.get("neighborhood", group.neighborhood)
