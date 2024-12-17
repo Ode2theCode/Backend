@@ -33,4 +33,4 @@ jobs:
       env:
         ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
-        python manage.py test
+        python manage.py test --keepdb
