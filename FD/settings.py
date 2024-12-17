@@ -176,18 +176,12 @@ STORAGES = {
 
 
 
-import urllib.parse
-import redis
-
-redis_url = os.environ.get('REDIS_URL')
-parsed_url = urllib.parse.urlparse(redis_url)
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [f"rediss://{parsed_url.netloc}"],
-            # "hosts": [("127.0.0.1", 6379)],
+            "hosts": [(os.getenv("REDIS_URL"))],
         },
     },
 }
@@ -196,13 +190,8 @@ import sentry_sdk
 
 sentry_sdk.init(
     dsn="https://ccb764743ed51a9f962c8417f8dfe02a@o4508450288631808.ingest.de.sentry.io/4508450290663504",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for tracing.
     traces_sample_rate=1.0,
     _experiments={
-        # Set continuous_profiling_auto_start to True
-        # to automatically start the profiler on when
-        # possible.
         "continuous_profiling_auto_start": True,
     },
 )
