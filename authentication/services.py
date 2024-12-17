@@ -14,6 +14,8 @@ from .models import *
 from .utils import send_otp_email
 from FD import settings
 
+from notifications.consumers import NotificationConsumer
+
 
 class UserService:
     VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'a1', 'a2', 'b1', 'b2', 'c1', 'c2']
@@ -180,5 +182,19 @@ class UserService:
         user.save()
         
         return user
+    
+    @classmethod
+    def delete_account(cls, user):
+        for group in user.owned_groups.all():
+            for member in group.members.all():
+                NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
+            group.delete()
+            
+        if user.profile_image:
+            cls.delete_s3_object(user.profile_image.name)
+        
+        user.delete()
+        
+        
         
           

@@ -18,7 +18,7 @@ urlpatterns = [
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     
     path('users/retrieve/', UserRetriveView.as_view(), name='user-retrieve'),
-    path('users/delete/', UserDeleteView.as_view(), name='user-delete'),
+    path('users/delete/', DeleteAccountView.as_view(), name='delete-account'),
     path('users/update/', UserUpdateView.as_view(), name='user-update'),
 
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

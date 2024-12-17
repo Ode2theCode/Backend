@@ -98,27 +98,7 @@ class UserRetriveView(APIView):
         
         serializer = self.serializer_class(user)
         
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-
-class UserDeleteView(APIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class= UserDeleteSerializer
-    
-    @silk_profile(name='user-delete')
-    def delete(self, request):
-        
-        user = request.user
-        serializer = self.serializer_class(data = request.data)
-        
-        serializer.is_valid(raise_exception=True)
-        
-        if not user.check_password(serializer.validated_data.get('password')):
-            return Response("invalid password", status=status.HTTP_400_BAD_REQUEST)
-        
-        user.delete()
-        return Response("user deleted successfully", status=status.HTTP_200_OK)
-     
+        return Response(serializer.data, status=status.HTTP_200_OK) 
 
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -158,3 +138,15 @@ class ChangePasswordView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         
         return Response("password changed successfully", status=status.HTTP_200_OK)
+    
+
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @silk_profile(name='delete-account')
+    def delete(self, request):
+        try:
+            UserService.delete_account(request.user)
+            return Response("account deleted successfully", status=status.HTTP_200_OK)
+        except:
+            return Response("account not deleted", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
