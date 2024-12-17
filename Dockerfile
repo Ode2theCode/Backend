@@ -8,7 +8,10 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory
 WORKDIR /app
 
-# Install dependencies
+# Install system dependencies
+RUN apk add --no-cache gcc musl-dev mariadb-connector-c-dev mariadb-dev pkgconfig
+
+# Install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --upgrade 'sentry-sdk[django]'
