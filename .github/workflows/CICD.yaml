@@ -2,8 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - feat/CI/CD
+
   pull_request:
     branches:
       - develop
@@ -13,6 +12,7 @@ on:
 
 jobs:
   test:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -39,6 +39,7 @@ jobs:
         python manage.py test --keepdb
 
   deploy:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
