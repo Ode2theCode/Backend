@@ -1,3 +1,16 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - feat/CI/CD
+  pull_request:
+    branches:
+      - develop
+  pull_request_target:
+    types:
+      - closed
+
 jobs:
   test:
     runs-on: ubuntu-latest
