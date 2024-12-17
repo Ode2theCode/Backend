@@ -1,19 +1,5 @@
-name: CI/CD
-
-on:
-  push:
-    branches:
-      - feat/CI/CD
-  pull_request:
-    branches:
-      - develop
-  pull_request_target:
-    types:
-      - closed
-
 jobs:
   test:
-    #if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -40,12 +26,14 @@ jobs:
         python manage.py test --keepdb
 
   deploy:
-    #if: github.event.pull_request.merged == true || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: Write .env file
+      run: echo "${{ secrets.ENV_FILE }}" > .env
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
