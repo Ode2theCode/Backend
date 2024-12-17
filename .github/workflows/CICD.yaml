@@ -59,8 +59,8 @@ jobs:
 
     - name: Build and Push Docker Image
       run: |
-        docker build -t ghcr.io/<kianyari>/<web>:latest .
-        docker push ghcr.io/<kianyari>/<web>:latest
+        docker build -t ghcr.io/kianyari/web:latest .
+        docker push ghcr.io/kianyari/web:latest
 
     - name: Deploy to Server
       uses: appleboy/ssh-action@v0.1.8
