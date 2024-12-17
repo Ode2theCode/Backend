@@ -1,14 +1,9 @@
 name: CI/CD
 
 on:
-  push:
-
   pull_request:
     branches:
       - develop
-  pull_request_target:
-    types:
-      - closed
 
 jobs:
   test:
