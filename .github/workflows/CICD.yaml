@@ -69,7 +69,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          docker pull ghcr.io/<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>:latest
-          docker stop <YOUR_CONTAINER_NAME> || true
-          docker rm <YOUR_CONTAINER_NAME> || true
-          docker run -d --name <YOUR_CONTAINER_NAME> -p 8000:8000 ghcr.io/<YOUR_GITHUB_USERNAME>/<YOUR_REPO_NAME>:latest
+          docker pull ghcr.io/kianyari/web:latest
+          docker stop web || true
+          docker rm web || true
+          docker run -d --name web -p 8000:8000 ghcr.io/kianyari/web:latest
