@@ -76,19 +76,15 @@ class GroupService:
                 NotificationConsumer.send_notification(member, f"{group.title} level has been updated to {data.get('level')}")
             group.level = data.get('level')
         
-        print(data.get('image'))
         if not group.image and data.get('image'):
-            print(1)
             path = data.get('image').name + f'_{group.id}'
             group.image.save(path, data.get('image'))
         
         if group.image and not data.get('image'):
-            print(2)
             GroupService.delete_s3_object(group.image.name)
             group.image = None
         
         if group.image and data.get('image') and group.image != data.get('image'):
-            print(3)
             GroupService.delete_s3_object(group.image.name)
             path = data.get('image').name + f'_{group.id}'
             group.image.save(path, data.get('image'))
