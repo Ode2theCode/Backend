@@ -43,6 +43,7 @@ class TestGroupAPI(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], group.title)
+        group.delete()
 
     def test_update_group_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -56,11 +57,13 @@ class TestGroupAPI(TestCase):
         group.refresh_from_db()
         self.assertEqual(group.description, "Updated description")
         self.assertEqual(group.level, "B1")
+        group.delete()
 
     def test_delete_group_api(self):
         group = GroupService.create_group(self.user, self.group_data)
         url = reverse('delete-group', kwargs={'title': group.title})
         response = self.client.delete(url)
+        self.assertEqual(self.user.groups.count(), 0)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Group.objects.count(), 0)
 
@@ -87,6 +90,8 @@ class TestGroupAPI(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(group.pending_members.filter(username="other_user").exists())
+        other_user.delete()
+        group.delete()
             
     def test_cancel_request_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -103,6 +108,8 @@ class TestGroupAPI(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(group.pending_members.filter(username="other_user").exists())
+        other_user.delete()
+        group.delete()
     
     def test_leave_group_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -111,6 +118,7 @@ class TestGroupAPI(TestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(group.members.filter(username=self.user.username).exists())
+        group.delete()
 
     def test_member_list_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -118,6 +126,7 @@ class TestGroupAPI(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], group.members.count())
+        group.delete()
         
     def test_pending_member_list_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -131,6 +140,8 @@ class TestGroupAPI(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], group.pending_members.count())
+        other_user.delete()
+        group.delete()
         
     def test_accept_request_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -152,6 +163,8 @@ class TestGroupAPI(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(group.members.filter(username="other_user").exists())
         self.assertFalse(group.pending_members.filter(username="other_user").exists())
+        other_user.delete()
+        group.delete()
         
     def test_decline_request_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -171,6 +184,8 @@ class TestGroupAPI(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(group.pending_members.filter(username="other_user").exists())
+        other_user.delete()
+        group.delete()
         
     def test_kick_member_api(self):
         group = GroupService.create_group(self.user, self.group_data)
@@ -191,3 +206,8 @@ class TestGroupAPI(TestCase):
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(group.members.filter(username="other_user").exists())
+        other_user.delete()
+        group.delete()
+        
+    def cleanup(self):
+        self.user.delete()

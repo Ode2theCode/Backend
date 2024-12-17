@@ -100,11 +100,16 @@ class GroupService:
         
         group.save()
     
-    @staticmethod
-    def delete_group(title):
+    @classmethod
+    def delete_group(cls, title):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         group = Group.objects.get(title=title)
+        for member in group.members.all():
+            NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
+        if group.image:
+            cls.delete_s3_object(group.image.name)
+        
         group.delete()
     
     @staticmethod
