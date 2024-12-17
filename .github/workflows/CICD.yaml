@@ -13,7 +13,7 @@ on:
 
 jobs:
   test:
-    if: github.event_name == 'pull_request'
+    #if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -40,7 +40,7 @@ jobs:
         python manage.py test --keepdb
 
   deploy:
-    if: github.event.pull_request.merged == true || github.event_name == 'push'
+    #if: github.event.pull_request.merged == true || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
