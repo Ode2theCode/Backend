@@ -9,10 +9,8 @@ import random
 
 load_dotenv()
 
-redis_url = os.getenv('REDIS_URL')
-redis_client = redis.StrictRedis.from_url(redis_url)
 
-from django.db.models import QuerySet, Q
+from django.db.models import QuerySet
 
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
@@ -20,7 +18,6 @@ from rest_framework import status
 from .models import *
 from groups.models import *
 
-from .filters import GroupFilter
 
 
 class UserTimeSlotService:

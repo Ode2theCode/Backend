@@ -40,7 +40,24 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
+          # Pull latest image
           docker pull ghcr.io/kianyari/web:latest
-          docker stop web || true
-          docker rm web || true
-          docker run -d --name web -p 8000:8000 ghcr.io/kianyari/web:latest
+          
+          # Stop and remove existing containers
+          docker stop web celery-worker celery-beat || true
+          docker rm web celery-worker celery-beat || true
+          
+          # Start web container
+          docker run -d --name web \
+            -p 8000:8000 \
+            ghcr.io/kianyari/web:latest
+          
+          # Start Celery worker container
+          docker run -d --name celery-worker \
+            ghcr.io/kianyari/web:latest \
+            celery -A FD worker --loglevel=info
+          
+          # Start Celery beat container
+          docker run -d --name celery-beat \
+            ghcr.io/kianyari/web:latest \
+            celery -A FD beat --loglevel=info
