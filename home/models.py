@@ -21,3 +21,7 @@ class GroupTimeSlot(models.Model):
     
     def __str__(self):
         return f"{self.day_of_week} {self.start_time} - {self.end_time}"
+    
+class UserSuggestions(models.Model):
+    user_id = models.IntegerField()
+    group_ids = models.TextField()
