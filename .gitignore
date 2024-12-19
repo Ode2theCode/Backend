@@ -2,7 +2,6 @@ Makefile
 venv/
 .env
 **/__pycache__/
-# Dockerfile
 docker-compose.yml
 .Dockerignore
 .env.docker

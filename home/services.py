@@ -1,13 +1,27 @@
+import redis
+from dotenv import load_dotenv
+import os
+from groups.models import Group
+
+from django.db.models import Case, When, Value, FloatField, F, ExpressionWrapper, Sum
+from django.db.models.functions import Coalesce
+import random
+
+load_dotenv()
+
+redis_url = os.getenv('REDIS_URL')
+redis_client = redis.StrictRedis.from_url(redis_url)
+
 from django.db.models import QuerySet, Q
 
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
-
 from .models import *
 from groups.models import *
 
 from .filters import GroupFilter
+
 
 class UserTimeSlotService:
     @staticmethod
@@ -107,23 +121,18 @@ class GroupTimeSlotService:
     def get_group_time_slots(title) -> QuerySet[GroupTimeSlot]:
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
         group = Group.objects.get(title=title)
-        return GroupTimeSlot.objects.filter(group=group)
+        return group.time_slots.all()
     
     @staticmethod
     def delete_time_slot(title, time_slot_id: int) -> None:
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         group = Group.objects.get(title=title)
-        time_slot = GroupTimeSlot.objects.filter(
-            id=time_slot_id,
-            group=group
-        ).first()
-        
-        if not time_slot:
+        if not group.time_slots.filter(id=time_slot_id).exists():
             raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
-
-            
+        time_slot = group.time_slots.filter(id=time_slot_id).first()
         time_slot.delete()
     
     
@@ -142,28 +151,65 @@ class HomeService:
 class SuggestionService:
     
     def get_suggestions(user) -> list[Group]:
-        user_time_slots = UserTimeSlotService.get_user_time_slots(user)
-        groups = Group.objects.exclude(members=user)
-        group_matches = []
         
-        for group in groups:
-            group_time_slots = GroupTimeSlotService.get_group_time_slots(group)
-            total_overlap = 0
+        if UserSuggestions.objects.filter(user_id=user.id).exists():
+            group_ids = UserSuggestions.objects.get(user_id=user.id).group_ids
+            group_ids = group_ids.split(',')
+            group_ids = [int(group_id) for group_id in group_ids]
+            groups = Group.objects.filter(id__in=group_ids)
+            return groups
+        VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+        user_level = user.level.upper()
+        level_index = VALID_LEVELS.index(user_level)
+        levels_to_consider = [user_level]
+        if level_index > 0:
+            levels_to_consider.append(VALID_LEVELS[level_index - 1])
+        if level_index < len(VALID_LEVELS) - 1:
+            levels_to_consider.append(VALID_LEVELS[level_index + 1])
+        
+        groups = Group.objects.filter(level__in=levels_to_consider).order_by('?')[:100]
+        
+        groups = list(groups)
 
-            for user_slot in user_time_slots:
-                for group_slot in group_time_slots:
-                    if user_slot.day_of_week == group_slot.day_of_week:
-                        overlap = min(user_slot.end_time, group_slot.end_time) - max(user_slot.start_time, group_slot.start_time)
-                        if overlap > 0:
-                            total_overlap += overlap
+        user_time_slots = UserTimeSlotService.get_user_time_slots(user)
+        
+        groups = Group.objects.filter(id__in=[group.id for group in groups]).annotate(
+            total_overlap=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        Case(
+                            *[
+                                When(
+                                    time_slots__day_of_week=user_slot.day_of_week,
+                                    then=F('time_slots__end_time') - F('time_slots__start_time')
+                                )
+                                for user_slot in user_time_slots
+                            ],
+                            output_field=FloatField()
+                        ),
+                        output_field=FloatField()
+                    )
+                ),
+                Value(0.0),
+                output_field=FloatField()
+            )
+        )
 
-            # if total_overlap > 0:
-            group_matches.append((group, total_overlap))
-                
-        group_matches.sort(key=lambda x: x[1], reverse=True)
-        group_matches = [group[0] for group in group_matches]
-        return group_matches
-    
+        if user.neighborhood:
+            groups = groups.annotate(
+                total_overlap=ExpressionWrapper(
+                    F('total_overlap') * Case(
+                        When(neighborhood=user.neighborhood, then=1.3),
+                        default=1,
+                        output_field=FloatField()
+                    ),
+                    output_field=FloatField()
+                )
+            )
+        
+        best_fit_groups = groups.order_by('-total_overlap')[:25]
+        UserSuggestions.objects.create(user_id=user.id, group_ids=','.join([str(group.id) for group in best_fit_groups]))
+        return best_fit_groups
 
 class AllGroupsService:
     @staticmethod
