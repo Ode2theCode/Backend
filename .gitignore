@@ -5,4 +5,3 @@ venv/
 docker-compose.yml
 .Dockerignore
 .env.docker
-supervisor.conf
