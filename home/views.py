@@ -26,13 +26,15 @@ class HomeView(APIView):
     
     @silk_profile(name='my-groups')
     def get(self, request):
-        joined_groups = HomeService.get_joined_groups(request.user, request)
-        filtered_groups = self.filter_queryset(joined_groups)
-        paginator = self.pagination_class()
-        paginated_data = paginator.paginate_queryset(filtered_groups, request)
-        serializer = self.serializer_class(paginated_data, many=True)
-        
-        return paginator.get_paginated_response(serializer.data)
+        try:
+            joined_groups = HomeService.get_joined_groups(request.user, request)
+            filtered_groups = self.filter_queryset(joined_groups)
+            paginator = self.pagination_class()
+            paginated_data = paginator.paginate_queryset(filtered_groups, request)
+            serializer = self.serializer_class(paginated_data, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Exception:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def filter_queryset(self, queryset):
         for backend in list(self.filter_backends):
@@ -47,12 +49,14 @@ class SuggestionsView(APIView):
     
     @silk_profile(name='suggestions')
     def get(self, request):
-        suggestions = SuggestionService.get_suggestions(request.user)
-        paginator = self.pagination_class()
-        paginated_data = paginator.paginate_queryset(suggestions, request)
-        serializer = self.serializer_class(paginated_data, many=True)
-        return paginator.get_paginated_response(serializer.data)
-    
+        try:
+            suggestions = SuggestionService.get_suggestions(request.user)
+            paginator = self.pagination_class()
+            paginated_data = paginator.paginate_queryset(suggestions, request)
+            serializer = self.serializer_class(paginated_data, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Exception:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AllGroupsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -65,13 +69,16 @@ class AllGroupsView(APIView):
     
     @silk_profile(name='all-groups')
     def get(self, request):
-        groups = AllGroupsService.get_all_groups()
-        groups = groups.annotate(member_count=Count('members'))
-        filtered_groups = self.filter_queryset(groups)
-        paginator = self.pagination_class()
-        paginated_data = paginator.paginate_queryset(filtered_groups, request)
-        serializer = self.serializer_class(paginated_data, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        try:
+            groups = AllGroupsService.get_all_groups()
+            groups = groups.annotate(member_count=Count('members'))
+            filtered_groups = self.filter_queryset(groups)
+            paginator = self.pagination_class()
+            paginated_data = paginator.paginate_queryset(filtered_groups, request)
+            serializer = self.serializer_class(paginated_data, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        except Exception:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def filter_queryset(self, queryset):
         for backend in list(self.filter_backends):
@@ -96,6 +103,8 @@ class UserTimeSlotCreateView(APIView):
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         
 class UserTimeSlotListView(APIView):
@@ -104,9 +113,12 @@ class UserTimeSlotListView(APIView):
     
     @silk_profile(name='user-time-slots-retrieve')
     def get(self, request):
-        time_slots = UserTimeSlotService.get_user_time_slots(request.user)
-        serializer = self.serializer_class(time_slots, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            time_slots = UserTimeSlotService.get_user_time_slots(request.user)
+            serializer = self.serializer_class(time_slots, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 class UserTimeSlotDeleteView(APIView):
@@ -119,8 +131,8 @@ class UserTimeSlotDeleteView(APIView):
             return Response("time slot deleted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-
-
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class GroupTimeSlotCreateView(APIView):
@@ -139,7 +151,8 @@ class GroupTimeSlotCreateView(APIView):
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class GroupTimeSlotListView(APIView):
@@ -154,7 +167,9 @@ class GroupTimeSlotListView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-    
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class GroupTimeSlotDeleteView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
@@ -166,7 +181,8 @@ class GroupTimeSlotDeleteView(APIView):
             return Response("time slot deleted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-       
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     
 from django.db import connection
