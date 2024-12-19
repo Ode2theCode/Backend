@@ -1,9 +1,6 @@
 name: CD
 
 on:
-  push:
-    branches:
-      - feat/celery_deployment
   pull_request:
     branches:
       - develop
