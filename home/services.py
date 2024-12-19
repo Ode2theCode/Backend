@@ -1,8 +1,17 @@
+import redis
+from dotenv import load_dotenv
+import os
+from groups.models import Group
+
+load_dotenv()
+
+redis_url = os.getenv('REDIS_URL')
+redis_client = redis.StrictRedis.from_url(redis_url)
+
 from django.db.models import QuerySet, Q
 
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
-
 
 from .models import *
 from groups.models import *
@@ -107,23 +116,18 @@ class GroupTimeSlotService:
     def get_group_time_slots(title) -> QuerySet[GroupTimeSlot]:
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
         group = Group.objects.get(title=title)
-        return GroupTimeSlot.objects.filter(group=group)
+        return group.time_slots.all()
     
     @staticmethod
     def delete_time_slot(title, time_slot_id: int) -> None:
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         group = Group.objects.get(title=title)
-        time_slot = GroupTimeSlot.objects.filter(
-            id=time_slot_id,
-            group=group
-        ).first()
-        
-        if not time_slot:
+        if not group.time_slots.filter(id=time_slot_id).exists():
             raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
-
-            
+        time_slot = group.time_slots.filter(id=time_slot_id).first()
         time_slot.delete()
     
     
@@ -141,13 +145,25 @@ class HomeService:
     
 class SuggestionService:
     
+
     def get_suggestions(user) -> list[Group]:
+        cached_groups = redis_client.get(f'user:{user.id}:matching_groups')
+        
+        if cached_groups:
+            print("Using cached groups")
+            group_ids = cached_groups.decode('utf-8').split(',')
+            return Group.objects.filter(id__in=group_ids)
+        
+        print("Not using cached groups")
+        
+        loc = user.neighborhood if user.neighborhood else None
         user_time_slots = UserTimeSlotService.get_user_time_slots(user)
-        groups = Group.objects.exclude(members=user)
+        
+        groups = Group.objects.all().prefetch_related('time_slots', 'members')
         group_matches = []
         
         for group in groups:
-            group_time_slots = GroupTimeSlotService.get_group_time_slots(group)
+            group_time_slots = group.time_slots.all()
             total_overlap = 0
 
             for user_slot in user_time_slots:
@@ -156,12 +172,20 @@ class SuggestionService:
                         overlap = min(user_slot.end_time, group_slot.end_time) - max(user_slot.start_time, group_slot.start_time)
                         if overlap > 0:
                             total_overlap += overlap
-
-            # if total_overlap > 0:
-            group_matches.append((group, total_overlap))
+            
+            if group.neighborhood == loc:
+                total_overlap *= 1.3
+            
+            if user not in group.members.all():    
+                group_matches.append((group, total_overlap))
+            
+            if len(group_matches) == 25:
+                break
                 
         group_matches.sort(key=lambda x: x[1], reverse=True)
         group_matches = [group[0] for group in group_matches]
+        redis_client.set(f'user:{user.id}:matching_groups', ','.join([str(group.id) for group in group_matches]), ex=60)
+        
         return group_matches
     
 
