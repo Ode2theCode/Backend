@@ -5,3 +5,5 @@ venv/
 docker-compose.yml
 .Dockerignore
 .env.docker
+prometheus.yml
+data/
