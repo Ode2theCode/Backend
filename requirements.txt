@@ -55,6 +55,7 @@ pillow==11.0.0
 pluggy==1.5.0
 prometheus_client==0.21.1
 prompt_toolkit==3.0.48
+psycopg2==2.9.10
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycodestyle==2.12.1
