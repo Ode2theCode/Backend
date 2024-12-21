@@ -9,7 +9,6 @@ def trigger_error(request):
 urlpatterns = [
     path('trigger_error/', trigger_error),
     path('', include('django_prometheus.urls')),
-    path("silk/", include("silk.urls", namespace="silk")),
 
     path('admin/', admin.site.urls),
     

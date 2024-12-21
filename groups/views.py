@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.pagination import PageNumberPagination
 
-from silk.profiling.profiler import silk_profile
 
 from authentication.models import User
 from .serializers import *
@@ -19,7 +18,6 @@ class GroupCreateView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupCreateSerializer
     
-    @silk_profile(name='group-create')
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -37,7 +35,6 @@ class GroupCreateView(APIView):
 class GroupRetrieveView(APIView):
     serializer_class = GroupRetrieveSerializer
     
-    @silk_profile(name='group-retrieve')
     def get(self, request, *args, **kwargs):
         try:
             group = GroupService.retrieve_group(kwargs.get('title'))
@@ -54,7 +51,6 @@ class GroupUpdateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
-    @silk_profile(name='group-update')
     def patch(self, request, *args, **kwargs):
         try:
             GroupService.update_group(kwargs.get('title'), request.data)
@@ -69,7 +65,6 @@ class GroupUpdateView(APIView):
 class GroupDeleteView(APIView):  
     permission_classes = [IsAuthenticated, IsGroupOwner]  
     
-    @silk_profile(name='group-delete')
     def delete(self, request, *args, **kwargs):
         try:
             GroupService.delete_group(kwargs.get('title'))
@@ -83,7 +78,6 @@ class GroupDeleteView(APIView):
 class GroupJoinRequestView(APIView):
     permission_classes = [IsAuthenticated]
     
-    @silk_profile(name='group-join-request')
     def post(self, request, *args, **kwargs):
         try:
             type = GroupService.join_request(kwargs.get('title'), request.user)
@@ -101,7 +95,6 @@ class GroupJoinRequestView(APIView):
 class GroupCancelRequestView(APIView):
     permission_classes = [IsAuthenticated]
     
-    @silk_profile(name='group-join-request-cancel')
     def post(self, request, *args, **kwargs):
         try:
             GroupService.cancel_join_request(kwargs.get('title'), request.user)
@@ -117,7 +110,6 @@ class GroupPendingRequestView(APIView):
     serializer_class = GroupPendingRequestSerializer
     pagination_class = PageNumberPagination
     
-    @silk_profile(name='group-pending-request')
     def get(self, request, *args, **kwargs):
         try:
             group_requests = GroupService.pending_requests(kwargs.get('title'))
@@ -135,7 +127,6 @@ class GroupAcceptRequestView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     serializer_class = GroupAcceptRequestSerializer
     
-    @silk_profile(name='group-accept-request')
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -152,7 +143,6 @@ class GroupDeclineRequestView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     serializer_class = GroupDeclineRequestSerializer
     
-    @silk_profile(name='group-decline-request')
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -168,7 +158,6 @@ class GroupDeclineRequestView(APIView):
 class GroupLeaveView(APIView):
     permission_classes = [IsAuthenticated, IsGroupMember]
     
-    @silk_profile(name='group-leave')
     def post(self, request, *args, **kwargs):
         try:
             GroupService.leave_group(kwargs.get('title'), request.user)
@@ -185,7 +174,6 @@ class GroupKickView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
     
-    @silk_profile(name='group-kick-member')
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -202,7 +190,6 @@ class GroupMemberListView(APIView):
     serializer_class = GroupMemberListSerializer
     pagination_class = PageNumberPagination
     
-    @silk_profile(name='group-member-list')
     def get(self, request, *args, **kwargs):
         try:
             members = GroupService.member_list(kwargs.get('title'))
