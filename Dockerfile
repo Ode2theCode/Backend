@@ -9,7 +9,6 @@ RUN apk add --no-cache gcc musl-dev mariadb-connector-c-dev mariadb-dev pkgconfi
 
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --upgrade 'sentry-sdk[django]'
 
 COPY . /app/
 
