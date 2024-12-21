@@ -66,7 +66,7 @@ class AllGroupsView(APIView):
     
     def get(self, request):
         try:
-            groups = AllGroupsService.get_all_groups()
+            groups = AllGroupsService.get_all_groups(request.user)
             groups = groups.annotate(member_count=Count('members'))
             filtered_groups = self.filter_queryset(groups)
             paginator = self.pagination_class()
