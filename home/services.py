@@ -36,8 +36,8 @@ class UserTimeSlotService:
         overlapping = UserTimeSlot.objects.filter(
             user=user,
             day_of_week=day_of_week.lower(),
-            start_time__lt=end_time,
-            end_time__gt=start_time
+            start_time__lte=end_time,
+            end_time__gte=start_time
         )
         
         if overlapping.exists():
@@ -92,8 +92,8 @@ class GroupTimeSlotService:
         overlapping = GroupTimeSlot.objects.filter(
             group=group,
             day_of_week=day_of_week.lower(),
-            start_time__lt=end_time,
-            end_time__gt=start_time
+            start_time__lte=end_time,
+            end_time__gte=start_time
         )
         
         if overlapping.exists():
