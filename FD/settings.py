@@ -1,8 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
+
 
 import os
 
@@ -35,7 +34,6 @@ INSTALLED_APPS = [
     'django_filters',
     'channels',
     'django_prometheus',
-    'silk',
     
     'authentication',
     'groups',
@@ -59,7 +57,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
-    'silk.middleware.SilkyMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
@@ -189,16 +186,6 @@ CHANNEL_LAYERS = {
 }
 
 
-sentry_sdk.init(
-    dsn="https://ccb764743ed51a9f962c8417f8dfe02a@o4508450288631808.ingest.de.sentry.io/4508450290663504",
-    integrations=[DjangoIntegration()],
-    traces_sample_rate=1.0,
-    _experiments={
-        "continuous_profiling_auto_start": True,
-    },
-)
-
-SILKY_PYTHON_PROFILER = True
 
 REDIS_URL = os.getenv("REDIS_URL")
 
