@@ -48,8 +48,6 @@ jsonschema-specifications==2024.10.1
 kombu==5.4.2
 mccabe==0.7.0
 msgpack==1.1.0
-mysql-connector-python==9.1.0
-mysqlclient==2.2.5
 packaging==24.2
 pillow==11.0.0
 pluggy==1.5.0
