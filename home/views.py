@@ -28,6 +28,7 @@ class HomeView(APIView):
             joined_groups = HomeService.get_joined_groups(request.user, request)
             filtered_groups = self.filter_queryset(joined_groups)
             paginator = self.pagination_class()
+            paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(filtered_groups, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)
@@ -49,6 +50,7 @@ class SuggestionsView(APIView):
         try:
             suggestions = SuggestionService.get_suggestions(request.user)
             paginator = self.pagination_class()
+            paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(suggestions, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)
@@ -70,6 +72,7 @@ class AllGroupsView(APIView):
             groups = groups.annotate(member_count=Count('members'))
             filtered_groups = self.filter_queryset(groups)
             paginator = self.pagination_class()
+            paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(filtered_groups, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)

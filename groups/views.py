@@ -195,6 +195,7 @@ class GroupMemberListView(APIView):
             members = GroupService.member_list(kwargs.get('title'))
             
             paginator = self.pagination_class()
+            paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(members, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)
