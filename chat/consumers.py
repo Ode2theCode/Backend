@@ -17,6 +17,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 from rest_framework.response import Response
 
+from django.db.models import F
+
 class ChatConsumer(WebsocketConsumer):
     connected_users = set()
     
@@ -63,7 +65,10 @@ class ChatConsumer(WebsocketConsumer):
     def get_chat_messages(self):
         return list(self.chat.messages.all().order_by('-timestamp').values(
             'content', 'sender__username', 'timestamp'
-        ))
+        ).annotate(
+            message=F('content'),
+            username=F('sender__username'),
+        ).values('message', 'username', 'timestamp'))
         
     def get_user_from_token(self, token):
         try:
