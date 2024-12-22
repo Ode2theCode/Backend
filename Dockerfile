@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 
-RUN apk add --no-cache postgresql-dev gcc musl-dev
+RUN apk add --no-cache postgresql-dev gcc musl-dev pkgconfig
 
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
