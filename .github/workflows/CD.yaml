@@ -65,8 +65,8 @@ jobs:
 
           chmod 644 .env
 
-          docker-compose pull
+          docker compose pull
           
-          docker-compose down
+          docker compose down
           
-          docker-compose up -d
+          docker compose up -d
