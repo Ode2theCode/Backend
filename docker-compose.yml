@@ -11,6 +11,7 @@ services:
     depends_on:
       - db
       - redis
+      
   
   db:
     image: postgres:latest
