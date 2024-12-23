@@ -65,9 +65,9 @@ services:
     networks:
       - fd
 
-  clerey-worker:
-    image: ghcr.io/kianyari/clerey-worker:latest
-    container_name: clerey-worker
+  celery-worker:
+    image: ghcr.io/kianyari/celery-worker:latest
+    container_name: celery-worker
     command: celery -A FD worker -l INFO
     env_file:
       - ./.env
