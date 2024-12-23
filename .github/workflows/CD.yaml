@@ -33,13 +33,14 @@ jobs:
 
     - name: Install Docker Compose
       run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose-plugin
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version
 
     - name: Build and Push Docker Image
       run: |
-        docker compose build
-        docker compose push
+        docker-compose build
+        docker-compose push
 
     - name: Deploy to Server
       uses: appleboy/ssh-action@v0.1.8
@@ -49,10 +50,10 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
           # Pull latest images
-          docker compose pull
+          docker-compose pull
           
           # Stop existing containers
-          docker compose down
+          docker-compose down
           
           # Start containers
-          docker compose up -d
+          docker-compose up -d
