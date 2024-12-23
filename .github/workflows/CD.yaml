@@ -54,6 +54,7 @@ jobs:
           
           echo "${{ secrets.ENV_FILE }}" > .env
           
+          ls ${{ github.workspace }}
           scp ${{ github.workspace }}/docker-compose.yml docker-compose.yml
           scp ${{ github.workspace }}/prometheus.yml prometheus.yml
           scp ${{ github.workspace }}/alert_rules.yml alert_rules.yml
