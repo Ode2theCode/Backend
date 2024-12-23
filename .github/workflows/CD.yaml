@@ -49,7 +49,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         source: "docker-compose.yml, prometheus.yml, alert_rules.yml, alertmanager.yml"
-        target: "/home/fd"
+        target: "/home/fd/"
 
     - name: Copy files and deploy
       uses: appleboy/ssh-action@v0.1.8
@@ -69,7 +69,7 @@ jobs:
           # scp ${{ github.workspace }}/alert_rules.yml alert_rules.yml
           # scp ${{ github.workspace }}/alertmanager.yml alertmanager.yml
 
-          chmod 644 .env
+          sudo chmod 644 .env
 
           sudo docker-compose pull
           
