@@ -42,6 +42,15 @@ jobs:
         docker-compose build
         docker-compose push
 
+    - name: Copy files to server via SSH
+      uses: appleboy/scp-action@v0.1.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        source: "docker-compose.yml, prometheus.yml, alert_rules.yml, alertmanager.yml"
+        target: "/home/fd"
+
     - name: Copy files and deploy
       uses: appleboy/ssh-action@v0.1.8
       with:
@@ -54,11 +63,11 @@ jobs:
           
           echo "${{ secrets.ENV_FILE }}" > .env
           
-          echo ls ${{ github.workspace }}
-          scp ${{ github.workspace }}/docker-compose.yml docker-compose.yml
-          scp ${{ github.workspace }}/prometheus.yml prometheus.yml
-          scp ${{ github.workspace }}/alert_rules.yml alert_rules.yml
-          scp ${{ github.workspace }}/alertmanager.yml alertmanager.yml
+          # echo ls ${{ github.workspace }}
+          # scp ${{ github.workspace }}/docker-compose.yml docker-compose.yml
+          # scp ${{ github.workspace }}/prometheus.yml prometheus.yml
+          # scp ${{ github.workspace }}/alert_rules.yml alert_rules.yml
+          # scp ${{ github.workspace }}/alertmanager.yml alertmanager.yml
 
           chmod 644 .env
 
