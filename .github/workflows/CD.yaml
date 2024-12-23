@@ -57,6 +57,7 @@ jobs:
           cat << prometheus.yml >> prometheus.yml
           cat << alert_rules.yml >> alert_rules.yml
           cat << alertmanager.yml >> alertmanager.yml
+          chmod 644 .env
     
           sudo docker-compose pull
           
