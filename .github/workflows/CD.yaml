@@ -51,12 +51,14 @@ jobs:
         script: |
 
           cd ../home/fd
+          
+          echo "${{ secrets.ENV_FILE }}" > .env
+          
+          scp ${{ github.workspace }}/docker-compose.yml docker-compose.yml
+          scp ${{ github.workspace }}/prometheus.yml prometheus.yml
+          scp ${{ github.workspace }}/alert_rules.yml alert_rules.yml
+          scp ${{ github.workspace }}/alertmanager.yml alertmanager.yml
 
-          cat << ENV_FILE >> .env
-          cat << docker-compose.yml >> docker-compose.yml
-          cat << prometheus.yml >> prometheus.yml
-          cat << alert_rules.yml >> alert_rules.yml
-          cat << alertmanager.yml >> alertmanager.yml
           chmod 644 .env
 
           sudo docker-compose pull
