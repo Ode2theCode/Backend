@@ -33,8 +33,8 @@ jobs:
 
     - name: Build and Push Docker Image
       run: |
-        docker build -t ghcr.io/kianyari/web:latest .
-        docker push ghcr.io/kianyari/web:latest
+        docker-compose build
+        docker-compose push
 
     - name: Deploy to Server
       uses: appleboy/ssh-action@v0.1.8
@@ -43,24 +43,11 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          # Pull latest image
-          docker pull ghcr.io/kianyari/web:latest
+          # Pull latest images
+          docker-compose pull
           
-          # Stop and remove existing containers
-          docker stop web celery-worker celery-beat || true
-          docker rm web celery-worker celery-beat || true
+          # Stop existing containers
+          docker-compose down
           
-          # Start web container
-          docker run -d --name web \
-            -p 8000:8000 \
-            ghcr.io/kianyari/web:latest
-          
-          # Start Celery worker container
-          docker run -d --name celery-worker \
-            ghcr.io/kianyari/web:latest \
-            celery -A FD worker --loglevel=info
-          
-          # Start Celery beat container
-          docker run -d --name celery-beat \
-            ghcr.io/kianyari/web:latest \
-            celery -A FD beat --loglevel=info
+          # Start containers
+          docker-compose up -d
