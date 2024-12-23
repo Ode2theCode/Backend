@@ -66,7 +66,7 @@ services:
       - fd
 
   celery-worker:
-    image: ghcr.io/kianyari/celery-worker:latest
+    image: ghcr.io/kianyari/web:latest
     container_name: celery-worker
     command: celery -A FD worker -l INFO
     env_file:
@@ -75,7 +75,7 @@ services:
       - fd
 
   celery-beat:
-    image: ghcr.io/kianyari/celery-beat:latest
+    image: ghcr.io/kianyari/web:latest
     container_name: celery-beat
     command: celery -A FD beat -l INFO
     env_file:
