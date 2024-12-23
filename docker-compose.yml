@@ -1,0 +1,100 @@
+services:
+  web:
+    image: ghcr.io/kianyari/web:latest
+    container_name: web
+    env_file:
+      - ENV_FILE
+    ports:
+      - 8000:8000
+    networks:
+      - fd
+  
+  db:
+    image: postgres:latest
+    container_name: db
+    
+    environment:
+      - DB_NAME= ${DB_NAME_PG}
+      - DB_USER= ${DB_USER_PG}
+      - DB_PASSWORD= ${DB_PASSWORD_PG}
+      - DB_HOST= ${DB_HOST_PG}
+      - DB_PORT= ${DB_PORT_PG}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - fd
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - fd
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - fd
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports: 
+      - 6379:6379
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: alertmanager
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - 9093:9093
+    networks:
+      - fd
+
+  clerey-worker:
+    image: ghcr.io/kianyari/clerey-worker:latest
+    container_name: clerey-worker
+    env_file:
+      - ENV_FILE
+    networks:
+      - fd
+
+  celery-beat:
+    image: ghcr.io/kianyari/celery-beat:latest
+    container_name: celery-beat
+    env_file:
+      - ENV_FILE
+    networks:
+      - fd
+
+  elasticsearch:
+    image: elasticsearch:7.14.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+
+volumes:
+  esdata01:
+  db_data:
+  prometheus_data:
+
+
+networks:
+  fd:
+    driver: bridge
