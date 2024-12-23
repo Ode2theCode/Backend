@@ -58,7 +58,7 @@ jobs:
           cat << alert_rules.yml >> alert_rules.yml
           cat << alertmanager.yml >> alertmanager.yml
           chmod 644 .env
-    
+
           sudo docker-compose pull
           
           sudo docker-compose down

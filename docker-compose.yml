@@ -8,6 +8,9 @@ services:
       - 8000:8000
     networks:
       - fd
+    depends_on:
+      - db
+      - redis
   
   db:
     image: postgres:latest
