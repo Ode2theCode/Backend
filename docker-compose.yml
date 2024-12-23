@@ -65,6 +65,7 @@ services:
   clerey-worker:
     image: ghcr.io/kianyari/clerey-worker:latest
     container_name: clerey-worker
+    command: celery -A FD worker -l INFO
     env_file:
       - ./.env
     networks:
@@ -73,6 +74,7 @@ services:
   celery-beat:
     image: ghcr.io/kianyari/celery-beat:latest
     container_name: celery-beat
+    command: celery -A FD beat -l INFO
     env_file:
       - ./.env
     networks:
