@@ -3,7 +3,7 @@ services:
     image: ghcr.io/kianyari/web:latest
     container_name: web
     env_file:
-      - ENV_FILE
+      - ./env
     ports:
       - 8000:8000
     networks:
