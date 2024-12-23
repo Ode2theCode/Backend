@@ -59,20 +59,14 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
 
-          cd ../home/fd
+          cd /home/fd
           
           echo "${{ secrets.ENV_FILE }}" > .env
-          
-          # echo ls ${{ github.workspace }}
-          # scp ${{ github.workspace }}/docker-compose.yml docker-compose.yml
-          # scp ${{ github.workspace }}/prometheus.yml prometheus.yml
-          # scp ${{ github.workspace }}/alert_rules.yml alert_rules.yml
-          # scp ${{ github.workspace }}/alertmanager.yml alertmanager.yml
 
-          sudo chmod 644 .env
+          chmod 644 .env
 
-          sudo docker-compose pull
+          docker-compose pull
           
-          sudo docker-compose down
+          docker-compose down
           
-          sudo docker-compose up -d
+          docker-compose up -d
