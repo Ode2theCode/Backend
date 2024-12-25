@@ -9,7 +9,6 @@ services:
     networks:
       - fd
     depends_on:
-      - db
       - redis
 
   prometheus:
