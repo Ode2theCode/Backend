@@ -2,7 +2,6 @@ Makefile
 venv/
 .env
 **/__pycache__/
-# docker-compose.yml
 .Dockerignore
 .env.docker
 alertmanager.yml
