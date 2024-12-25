@@ -12,30 +12,6 @@ services:
       - db
       - redis
 
-  
-  db:
-    image: postgres:latest
-    container_name: db
-    
-    environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD_PG}
-      - DB_NAME=${DB_NAME_PG}
-      - DB_USER=${DB_USER_PG}
-      - DB_PASSWORD=${DB_PASS_WORD_PG}
-      - DB_HOST=${DB_HOST_PG}
-      - DB_PORT=${DB_PORT_PG}
-      # - DB_NAME=${DB_NAME}
-      # - DB_USER=${DB_USER}
-      # - DB_PASSWORD=${DB_PASSWORD}
-      # - DB_HOST=${DB_HOST}
-      # - DB_PORT=${DB_PORT}
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-    networks:
-      - fd
-
   prometheus:
     image: prom/prometheus
     container_name: prometheus
@@ -113,7 +89,6 @@ services:
 
 volumes:
   esdata01:
-  db_data:
   prometheus_data:
   grafana_data:
 

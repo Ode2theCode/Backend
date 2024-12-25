@@ -5,3 +5,4 @@ venv/
 # docker-compose.yml
 .Dockerignore
 .env.docker
+alertmanager.yml

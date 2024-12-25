@@ -48,7 +48,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        source: "docker-compose.yml, prometheus.yml, alert_rules.yml, alertmanager.yml"
+        source: "docker-compose.yml, prometheus.yml, alert_rules.yml"
         target: "/home/fd/"
 
     - name: Copy files and deploy
@@ -62,6 +62,7 @@ jobs:
           cd /home/fd
           
           echo "${{ secrets.ENV_FILE }}" > .env
+          echo "${{ secrets.ALERT_MANAGER}}" > alertmanager.yml
 
           chmod 644 .env
 
@@ -70,7 +71,4 @@ jobs:
           docker compose down
           
           docker compose up -d
-
-          # docker compose exec web python manage.py makemigrations
-          # docker compose exec web python manage.py migrate
 
