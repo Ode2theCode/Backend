@@ -29,13 +29,29 @@ class SuggestionSerializer(serializers.ModelSerializer):
         
 class GroupSerializer(serializers.ModelSerializer):
     member_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = Group
         fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private', 'member_count']
+
         
     def get_member_count(self, obj):
         return obj.members.count()
 
+    
+class AllGroupsSerializer(serializers.ModelSerializer):
+    member_count = serializers.SerializerMethodField()
+    requested = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Group
+        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private', 'member_count', 'requested']
         
+    def get_member_count(self, obj):
+        return obj.members.count()
+
+    def get_requested(self, obj):
+        request = self.context['request']
+        return request.user in obj.pending_members.all()
 
         

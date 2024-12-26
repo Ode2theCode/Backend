@@ -7,6 +7,11 @@ from chat.models import Chat
 from notifications.consumers import NotificationConsumer
 from notifications.models import Notification
 
+import boto3
+
+from FD import settings
+
+
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -14,6 +19,16 @@ class GroupService:
     
     VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
     
+    @staticmethod
+    def delete_s3_object(file_path):
+        s3 = boto3.client('s3',
+                          aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                          aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                          endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        )
+        s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_path)
+        
+
     def check_title(title):
         if Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group title already exists', 'status': status.HTTP_400_BAD_REQUEST})
@@ -62,7 +77,20 @@ class GroupService:
                 NotificationConsumer.send_notification(member, f"{group.title} level has been updated to {data.get('level')}")
             group.level = data.get('level')
         
-        group.image = data.get("image", group.image)
+        if not group.image and data.get('image'):
+            path = data.get('image').name + f'_{group.id}'
+            group.image.save(path, data.get('image'))
+        
+        if group.image and not data.get('image'):
+            GroupService.delete_s3_object(group.image.name)
+            group.image = None
+        
+        if group.image and data.get('image') and group.image != data.get('image'):
+            GroupService.delete_s3_object(group.image.name)
+            path = data.get('image').name + f'_{group.id}'
+            group.image.save(path, data.get('image'))
+            
+
         group.private = data.get("private", group.private)
         group.meeting_url = data.get("meeting_url", group.meeting_url)
         group.neighborhood = data.get("neighborhood", group.neighborhood)
@@ -70,11 +98,16 @@ class GroupService:
         
         group.save()
     
-    @staticmethod
-    def delete_group(title):
+    @classmethod
+    def delete_group(cls, title):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         group = Group.objects.get(title=title)
+        for member in group.members.all():
+            NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
+        if group.image:
+            cls.delete_s3_object(group.image.name)
+
         group.delete()
     
     @staticmethod
@@ -148,12 +181,15 @@ class GroupService:
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         group = Group.objects.get(title=title)
+        if group.owner == user:
+            raise ValidationError({'detail': 'You cannot leave your own group', 'status': status.HTTP_400_BAD_REQUEST})
+        
+
         if not group.members.filter(username=user.username).exists():
             raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
         group.remove_member(user)
         
-        if group.owner == user:
-            group.delete()
+
         group.save()
     
     @staticmethod

@@ -27,6 +27,9 @@ class GroupCreateView(APIView):
             return Response("group created successfully", status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
 
 class GroupRetrieveView(APIView):
@@ -39,6 +42,9 @@ class GroupRetrieveView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
@@ -52,18 +58,24 @@ class GroupUpdateView(APIView):
             return Response("group updated successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
 class GroupDeleteView(APIView):  
     permission_classes = [IsAuthenticated, IsGroupOwner]  
+    
     def delete(self, request, *args, **kwargs):
         try:
             GroupService.delete_group(kwargs.get('title'))
             return Response("group deleted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-        
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class GroupJoinRequestView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -77,16 +89,23 @@ class GroupJoinRequestView(APIView):
             
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
      
        
 class GroupCancelRequestView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         try:
             GroupService.cancel_join_request(kwargs.get('title'), request.user)
             return Response("request cancelled successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
   
    
 class GroupPendingRequestView(APIView):
@@ -103,6 +122,9 @@ class GroupPendingRequestView(APIView):
             return paginator.get_paginated_response(serializer.data)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class GroupAcceptRequestView(APIView):
@@ -117,8 +139,10 @@ class GroupAcceptRequestView(APIView):
             return Response("request accepted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-       
-          
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class GroupDeclineRequestView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     serializer_class = GroupDeclineRequestSerializer
@@ -128,11 +152,13 @@ class GroupDeclineRequestView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             GroupService.decline_request(kwargs.get('title'), serializer.validated_data['username'])
-            return Response("request accepted successfully", status=status.HTTP_200_OK)
+            return Response("request declined successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 
-        
 
 class GroupLeaveView(APIView):
     permission_classes = [IsAuthenticated, IsGroupMember]
@@ -143,6 +169,9 @@ class GroupLeaveView(APIView):
             return Response("group left successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
         
 
@@ -150,6 +179,7 @@ class GroupKickView(APIView):
     serializer_class = GroupKickSerializer
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
+
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -158,21 +188,27 @@ class GroupKickView(APIView):
             return Response("user kicked successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-        
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GroupMemberListView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupMemberListSerializer
     pagination_class = PageNumberPagination
     
-    
+
     def get(self, request, *args, **kwargs):
         try:
             members = GroupService.member_list(kwargs.get('title'))
             
             paginator = self.pagination_class()
+            paginator.page_size = 4
+
             paginated_data = paginator.paginate_queryset(members, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

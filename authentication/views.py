@@ -4,8 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-
 from rest_framework.permissions import IsAuthenticated
+
+
 
 from .serializers import *
 from .models import *
@@ -22,7 +23,9 @@ class RegisterUserView(APIView):
             return Response("user created successfully, please verify your email", status=status.HTTP_201_CREATED)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-        
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 class VerifyEmailView(APIView):
     serializer_class = VerifyEmailSerializer
@@ -36,6 +39,9 @@ class VerifyEmailView(APIView):
             return Response("email verified successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
     
 
@@ -50,6 +56,9 @@ class LoginUserView(APIView):
             return Response(tokens, status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class PasswordResetRequestView(APIView):
@@ -64,10 +73,14 @@ class PasswordResetRequestView(APIView):
             return Response("password reset link sent successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        # except Exception as e:
+        #     return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
    
  
 class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
+    
     def post(self, request, *args, **kwargs):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -78,7 +91,10 @@ class PasswordResetConfirmView(APIView):
             return Response("password reset successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
 
         
 class UserRetriveView(APIView):
@@ -86,30 +102,13 @@ class UserRetriveView(APIView):
     serializer_class= UserRetriveSerializer
     
     def get(self, request):
-        user = request.user
-        
-        serializer = self.serializer_class(user)
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
+        try:
+            user = request.user
+            serializer = self.serializer_class(user)
+            return Response(serializer.data, status=status.HTTP_200_OK) 
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class UserDeleteView(APIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class= UserDeleteSerializer
-    
-    def delete(self, request):
-        
-        user = request.user
-        serializer = self.serializer_class(data = request.data)
-        
-        serializer.is_valid(raise_exception=True)
-        
-        if not user.check_password(serializer.validated_data.get('password')):
-            return Response("invalid password", status=status.HTTP_400_BAD_REQUEST)
-        
-        user.delete()
-        return Response("user deleted successfully", status=status.HTTP_200_OK)
-     
 
 class UserUpdateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -122,9 +121,13 @@ class UserUpdateView(APIView):
             return Response("user updated successfully", status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response("user not found", status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
     serializer_class= ChangePasswordSerializer
     
     def patch(self, request):
@@ -139,11 +142,22 @@ class ChangePasswordView(APIView):
             new_password = serializer.validated_data.get('new_password')
             
             UserService.change_password(user, old_password, new_password)
-        
-        except User.DoesNotExist:
-            return Response("user not found", status=status.HTTP_404_NOT_FOUND)
+            return Response("password changed successfully", status=status.HTTP_200_OK)
         
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return Response("password changed successfully", status=status.HTTP_200_OK)
+    
+
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def delete(self, request):
+        try:
+            UserService.delete_account(request.user)
+            return Response("account deleted successfully", status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

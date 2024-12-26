@@ -1,6 +1,8 @@
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+
+
 import os
 
 load_dotenv()
@@ -31,6 +33,8 @@ INSTALLED_APPS = [
     'storages',
     'django_filters',
     'channels',
+    'django_prometheus',
+
     
     'authentication',
     'groups',
@@ -42,7 +46,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    
   
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -51,6 +57,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -74,7 +82,7 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = 'FD.wsgi.application'
+
 ASGI_APPLICATION = "FD.asgi.application"
 
 
@@ -131,8 +139,8 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 1
-}
+    'PAGE_SIZE': 3
+
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'FD API',
@@ -169,18 +177,35 @@ STORAGES = {
 
 
 
-import urllib.parse
-import redis
 
-redis_url = os.environ.get('REDIS_URL')
-parsed_url = urllib.parse.urlparse(redis_url)
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [f"rediss://{parsed_url.netloc}"],
-            # "hosts": [("127.0.0.1", 6379)],
+            "hosts": [(os.getenv("REDIS_URL"))],
         },
     },
 }
+
+
+
+REDIS_URL = os.getenv("REDIS_URL")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+CELERY_BROKER_URL = os.getenv("REDIS_URL")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL")
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Tehran'
+
