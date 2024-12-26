@@ -33,6 +33,7 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private', 'member_count']
+
         
     def get_member_count(self, obj):
         return obj.members.count()

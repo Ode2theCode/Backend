@@ -15,6 +15,7 @@ from django.db.models import QuerySet
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
+
 from .models import *
 from groups.models import *
 
@@ -130,6 +131,7 @@ class GroupTimeSlotService:
         if not group.time_slots.filter(id=time_slot_id).exists():
             raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
         time_slot = group.time_slots.filter(id=time_slot_id).first()
+
         time_slot.delete()
     
     
@@ -212,3 +214,4 @@ class AllGroupsService:
     @staticmethod
     def get_all_groups(user) -> QuerySet[Group]:
         return Group.objects.exclude(members=user)
+

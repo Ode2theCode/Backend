@@ -6,6 +6,7 @@ urlpatterns = [
     path('suggestions/', SuggestionsView.as_view(), name='suggestions'),
     path('all-groups/', AllGroupsView.as_view(), name='all-groups'),
 
+
     
     path('user-time-slots/create/', UserTimeSlotCreateView.as_view(), name='user-time-slot-create'),
     path('user-time-slots/', UserTimeSlotListView.as_view(), name='user-time-slot-list'),

@@ -10,6 +10,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 from django_filters.rest_framework import DjangoFilterBackend
 
+
 from .serializers import *
 from .services import *
 from groups.models import*
@@ -35,6 +36,7 @@ class HomeView(APIView):
         except Exception:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
     def filter_queryset(self, queryset):
         for backend in list(self.filter_backends):
             queryset = backend().filter_queryset(self.request, queryset, self)
@@ -58,6 +60,7 @@ class SuggestionsView(APIView):
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AllGroupsView(APIView):
+
     permission_classes = [IsAuthenticated]
     serializer_class = AllGroupsSerializer
     pagination_class = PageNumberPagination
@@ -104,6 +107,7 @@ class UserTimeSlotCreateView(APIView):
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
         
 class UserTimeSlotListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -131,6 +135,7 @@ class UserTimeSlotDeleteView(APIView):
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+
 class GroupTimeSlotCreateView(APIView):
     permission_classes = [IsAuthenticated, IsGroupOwner]
     serializer_class = GroupTimeSlotSerializer
@@ -148,6 +153,7 @@ class GroupTimeSlotCreateView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class GroupTimeSlotListView(APIView):
@@ -176,6 +182,7 @@ class GroupTimeSlotDeleteView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
     
 from django.db import connection

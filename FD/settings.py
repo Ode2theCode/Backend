@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django_filters',
     'channels',
     'django_prometheus',
+
     
     'authentication',
     'groups',
@@ -80,6 +81,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 ASGI_APPLICATION = "FD.asgi.application"
 
@@ -138,7 +140,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 3
-}
+
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'FD API',
@@ -176,6 +178,7 @@ STORAGES = {
 
 
 
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -205,3 +208,4 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Tehran'
+

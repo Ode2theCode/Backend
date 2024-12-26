@@ -7,6 +7,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
 
 
+
 from .serializers import *
 from .models import *
 from .services import *
@@ -24,6 +25,7 @@ class RegisterUserView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 class VerifyEmailView(APIView):
     serializer_class = VerifyEmailSerializer
@@ -39,6 +41,7 @@ class VerifyEmailView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
     
 
@@ -57,6 +60,7 @@ class LoginUserView(APIView):
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+
 class PasswordResetRequestView(APIView):
     serializer_class = PasswordResetRequestSerializer
     
@@ -71,6 +75,7 @@ class PasswordResetRequestView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         # except Exception as e:
         #     return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
    
  
 class PasswordResetConfirmView(APIView):
@@ -89,6 +94,7 @@ class PasswordResetConfirmView(APIView):
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
 
         
 class UserRetriveView(APIView):
@@ -121,6 +127,7 @@ class UserUpdateView(APIView):
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
+
     serializer_class= ChangePasswordSerializer
     
     def patch(self, request):
@@ -153,3 +160,4 @@ class DeleteAccountView(APIView):
             return Response("account deleted successfully", status=status.HTTP_200_OK)
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

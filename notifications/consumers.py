@@ -20,6 +20,7 @@ class NotificationConsumer(WebsocketConsumer):
             self.close(403)
         
         self.scope['user'] = user
+
         
         async_to_sync(self.channel_layer.group_add)(
             f"user_{user.id}",

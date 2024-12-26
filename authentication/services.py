@@ -9,7 +9,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
 import boto3
-
 from .models import *
 from .utils import send_otp_email
 from FD import settings
@@ -29,6 +28,7 @@ class UserService:
         )
         s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_path)
         
+
 
     
     @staticmethod
@@ -112,6 +112,7 @@ class UserService:
             
         user.city = data.get('city', user.city)
         user.neighborhood = data.get('neighborhood', user.neighborhood)
+
         user.save()
         return user
     
@@ -194,7 +195,6 @@ class UserService:
             cls.delete_s3_object(user.profile_image.name)
         
         user.delete()
-        
-        
+
         
           

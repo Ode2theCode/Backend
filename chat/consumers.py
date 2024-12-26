@@ -40,6 +40,7 @@ class ChatConsumer(WebsocketConsumer):
         
         self.scope['user'] = user
         self.connected_users.add(user.id)
+
         
         if user not in self.chat.group.members.all():
             self.accept()
@@ -69,6 +70,7 @@ class ChatConsumer(WebsocketConsumer):
             message=F('content'),
             username=F('sender__username'),
         ).values('message', 'username', 'timestamp'))
+
         
     def get_user_from_token(self, token):
         try:
@@ -79,6 +81,7 @@ class ChatConsumer(WebsocketConsumer):
             return None
 
     def disconnect(self, close_code):
+
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name, self.channel_name
         )
@@ -98,6 +101,7 @@ class ChatConsumer(WebsocketConsumer):
         for member in group_members:
             if member.id not in self.connected_users:
                 NotificationConsumer.send_notification(member, f"New message in {self.room_name} from {user.username}")
+
         
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
@@ -111,8 +115,10 @@ class ChatConsumer(WebsocketConsumer):
         
 
     def chat_message(self, event):
+
         self.send(text_data=json.dumps({
             'message': event['message'],
             'username': event['username'],
             'timestamp': event['timestamp']
         }))
+

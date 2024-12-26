@@ -18,4 +18,5 @@ urlpatterns = [
     path('<str:title>/accept/', GroupAcceptRequestView.as_view(), name='accept-request'),
     path('<str:title>/decline/', GroupDeclineRequestView.as_view(), name='decline-request'),
     path('<str:title>/kick/', GroupKickView.as_view(), name='kick-member'),
+
 ]

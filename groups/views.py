@@ -29,7 +29,7 @@ class GroupCreateView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
         
 
 class GroupRetrieveView(APIView):
@@ -44,6 +44,7 @@ class GroupRetrieveView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
@@ -62,6 +63,7 @@ class GroupUpdateView(APIView):
 
 
 
+
 class GroupDeleteView(APIView):  
     permission_classes = [IsAuthenticated, IsGroupOwner]  
     
@@ -73,7 +75,6 @@ class GroupDeleteView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
 
 class GroupJoinRequestView(APIView):
     permission_classes = [IsAuthenticated]
@@ -90,11 +91,12 @@ class GroupJoinRequestView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
      
        
 class GroupCancelRequestView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request, *args, **kwargs):
         try:
             GroupService.cancel_join_request(kwargs.get('title'), request.user)
@@ -103,6 +105,7 @@ class GroupCancelRequestView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
   
    
 class GroupPendingRequestView(APIView):
@@ -121,6 +124,7 @@ class GroupPendingRequestView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class GroupAcceptRequestView(APIView):
@@ -155,6 +159,7 @@ class GroupDeclineRequestView(APIView):
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
+
 class GroupLeaveView(APIView):
     permission_classes = [IsAuthenticated, IsGroupMember]
     
@@ -167,13 +172,14 @@ class GroupLeaveView(APIView):
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
         
 
 class GroupKickView(APIView):
     serializer_class = GroupKickSerializer
     permission_classes = [IsAuthenticated, IsGroupOwner]
     
-    
+
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -190,12 +196,14 @@ class GroupMemberListView(APIView):
     serializer_class = GroupMemberListSerializer
     pagination_class = PageNumberPagination
     
+
     def get(self, request, *args, **kwargs):
         try:
             members = GroupService.member_list(kwargs.get('title'))
             
             paginator = self.pagination_class()
             paginator.page_size = 4
+
             paginated_data = paginator.paginate_queryset(members, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)
@@ -203,3 +211,4 @@ class GroupMemberListView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

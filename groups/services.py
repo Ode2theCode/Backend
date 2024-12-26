@@ -11,6 +11,7 @@ import boto3
 
 from FD import settings
 
+
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -27,7 +28,7 @@ class GroupService:
         )
         s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_path)
         
-    
+
     def check_title(title):
         if Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group title already exists', 'status': status.HTTP_400_BAD_REQUEST})
@@ -89,6 +90,7 @@ class GroupService:
             path = data.get('image').name + f'_{group.id}'
             group.image.save(path, data.get('image'))
             
+
         group.private = data.get("private", group.private)
         group.meeting_url = data.get("meeting_url", group.meeting_url)
         group.neighborhood = data.get("neighborhood", group.neighborhood)
@@ -105,7 +107,7 @@ class GroupService:
             NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
         if group.image:
             cls.delete_s3_object(group.image.name)
-        
+
         group.delete()
     
     @staticmethod
@@ -182,10 +184,12 @@ class GroupService:
         if group.owner == user:
             raise ValidationError({'detail': 'You cannot leave your own group', 'status': status.HTTP_400_BAD_REQUEST})
         
+
         if not group.members.filter(username=user.username).exists():
             raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
         group.remove_member(user)
         
+
         group.save()
     
     @staticmethod
