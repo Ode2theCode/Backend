@@ -23,16 +23,21 @@ class GroupTimeSlotSerializer(serializers.ModelSerializer):
         fields = ['id', 'day_of_week', 'start_time', 'end_time']
         
 class SuggestionSerializer(serializers.ModelSerializer):
+    requested = serializers.SerializerMethodField()
     class Meta:
         model = Group
-        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private']
+        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private', 'requested']
         
+    def get_requested(self, obj):
+        request = self.context['request']
+        return request.user in obj.pending_members.all()
+            
 class GroupSerializer(serializers.ModelSerializer):
     member_count = serializers.SerializerMethodField()
-    
+    requested = serializers.SerializerMethodField()
     class Meta:
         model = Group
-        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private', 'member_count']
+        fields = ['id', 'title', 'description', 'level', 'city', 'neighborhood', 'created_at', 'meeting_url', 'private', 'member_count', 'requestd']
 
         
     def get_member_count(self, obj):

@@ -28,13 +28,11 @@ def find_matching_groups(user):
     if level_index < len(VALID_LEVELS) - 1:
         levels_to_consider.append(VALID_LEVELS[level_index + 1])
     
-    groups = Group.objects.filter(level__in=levels_to_consider).order_by('?')[:100]
-    
-    groups = list(groups)
-
     user_time_slots = UserTimeSlotService.get_user_time_slots(user)
     
-    groups = Group.objects.filter(id__in=[group.id for group in groups]).annotate(
+    groups = Group.objects.filter(level__in=levels_to_consider)\
+        .exclude(id__in=[group.id for group in user.groups.all()])\
+        .order_by('?')[:1000].annotate(
         total_overlap=Coalesce(
             Sum(
                 ExpressionWrapper(
