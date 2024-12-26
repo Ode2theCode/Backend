@@ -59,7 +59,7 @@ class SuggestionsView(APIView):
 
 class AllGroupsView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = GroupSerializer
+    serializer_class = AllGroupsSerializer
     pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = GroupFilter
@@ -74,7 +74,7 @@ class AllGroupsView(APIView):
             paginator = self.pagination_class()
             paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(filtered_groups, request)
-            serializer = self.serializer_class(paginated_data, many=True)
+            serializer = self.serializer_class(paginated_data, many=True, context={'request': request})
             return paginator.get_paginated_response(serializer.data)
         except Exception:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
