@@ -1,0 +1,29 @@
+groups:
+- name: website
+  rules:
+  - alert: WebsiteDown
+    expr: up{job="website"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Website is down"
+      description: "The website has been down for more than 1 minute"
+
+  - alert: HighResponseTime
+    expr: prometheus_http_request_duration_seconds{job="website"} > 2
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High response time"
+      description: "Website response time is above 2 seconds for 5 minutes"
+
+  - alert: HighErrorRate
+    expr: rate(django_http_responses_total_by_status_total{status=~"5.."}[5m]) > 0
+    for: 0s
+    labels:
+      severity: warning
+    annotations:
+      summary: "High error rate"
+      description: "Website is returning too many 5xx errors"

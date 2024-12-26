@@ -179,12 +179,13 @@ class GroupService:
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         group = Group.objects.get(title=title)
+        if group.owner == user:
+            raise ValidationError({'detail': 'You cannot leave your own group', 'status': status.HTTP_400_BAD_REQUEST})
+        
         if not group.members.filter(username=user.username).exists():
             raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
         group.remove_member(user)
         
-        if group.owner == user:
-            group.delete()
         group.save()
     
     @staticmethod

@@ -28,6 +28,7 @@ class HomeView(APIView):
             joined_groups = HomeService.get_joined_groups(request.user, request)
             filtered_groups = self.filter_queryset(joined_groups)
             paginator = self.pagination_class()
+            paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(filtered_groups, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)
@@ -49,6 +50,7 @@ class SuggestionsView(APIView):
         try:
             suggestions = SuggestionService.get_suggestions(request.user)
             paginator = self.pagination_class()
+            paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(suggestions, request)
             serializer = self.serializer_class(paginated_data, many=True)
             return paginator.get_paginated_response(serializer.data)
@@ -57,7 +59,7 @@ class SuggestionsView(APIView):
 
 class AllGroupsView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = GroupSerializer
+    serializer_class = AllGroupsSerializer
     pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = GroupFilter
@@ -66,12 +68,13 @@ class AllGroupsView(APIView):
     
     def get(self, request):
         try:
-            groups = AllGroupsService.get_all_groups()
+            groups = AllGroupsService.get_all_groups(request.user)
             groups = groups.annotate(member_count=Count('members'))
             filtered_groups = self.filter_queryset(groups)
             paginator = self.pagination_class()
+            paginator.page_size = 4
             paginated_data = paginator.paginate_queryset(filtered_groups, request)
-            serializer = self.serializer_class(paginated_data, many=True)
+            serializer = self.serializer_class(paginated_data, many=True, context={'request': request})
             return paginator.get_paginated_response(serializer.data)
         except Exception:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)

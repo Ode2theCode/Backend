@@ -17,6 +17,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import status
 from rest_framework.response import Response
 
+from django.db.models import F
+
 class ChatConsumer(WebsocketConsumer):
     connected_users = set()
     
@@ -63,7 +65,10 @@ class ChatConsumer(WebsocketConsumer):
     def get_chat_messages(self):
         return list(self.chat.messages.all().order_by('-timestamp').values(
             'content', 'sender__username', 'timestamp'
-        ))
+        ).annotate(
+            message=F('content'),
+            username=F('sender__username'),
+        ).values('message', 'username', 'timestamp'))
         
     def get_user_from_token(self, token):
         try:
@@ -89,6 +94,10 @@ class ChatConsumer(WebsocketConsumer):
             content=message,
             sender=user
         )
+        group_members = Group.objects.get(title=self.room_name).members.exclude(id__in=self.connected_users)
+        for member in group_members:
+            if member.id not in self.connected_users:
+                NotificationConsumer.send_notification(member, f"New message in {self.room_name} from {user.username}")
         
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
@@ -100,13 +109,8 @@ class ChatConsumer(WebsocketConsumer):
             }
         )
         
-        group_members = Group.objects.get(title=self.room_name).members.exclude(id__in=self.connected_users)
-        for member in group_members:
-            NotificationConsumer.send_notification(member, f"New message in {self.room_name} from {user.username}")
 
-    # Receive message from room group
     def chat_message(self, event):
-        # Send message to WebSocket
         self.send(text_data=json.dumps({
             'message': event['message'],
             'username': event['username'],

@@ -210,5 +210,5 @@ class SuggestionService:
 
 class AllGroupsService:
     @staticmethod
-    def get_all_groups() -> QuerySet[Group]:
-        return Group.objects.all()
+    def get_all_groups(user) -> QuerySet[Group]:
+        return Group.objects.exclude(members=user)

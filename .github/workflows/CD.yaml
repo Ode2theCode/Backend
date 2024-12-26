@@ -1,6 +1,9 @@
 name: CD
 
 on:
+  push:
+    branches:
+      - fix/sprint_issues
   pull_request:
     branches:
       - develop
@@ -28,36 +31,44 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.TOKEN }}
 
+    - name: Install Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        docker-compose --version
+
     - name: Build and Push Docker Image
       run: |
-        docker build -t ghcr.io/kianyari/web:latest .
-        docker push ghcr.io/kianyari/web:latest
+        docker-compose build
+        docker-compose push
 
-    - name: Deploy to Server
+    - name: Copy files to server via SSH
+      uses: appleboy/scp-action@v0.1.0
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        source: "docker-compose.yml, prometheus.yml, alert_rules.yml"
+        target: "/home/fd/"
+
+    - name: Copy files and deploy
       uses: appleboy/ssh-action@v0.1.8
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          # Pull latest image
-          docker pull ghcr.io/kianyari/web:latest
+
+          cd /home/fd
           
-          # Stop and remove existing containers
-          docker stop web celery-worker celery-beat || true
-          docker rm web celery-worker celery-beat || true
+          echo "${{ secrets.ENV_FILE }}" > .env
+          echo "${{ secrets.ALERT_MANAGER}}" > alertmanager.yml
+
+          chmod 644 .env
+
+          docker compose pull web
           
-          # Start web container
-          docker run -d --name web \
-            -p 8000:8000 \
-            ghcr.io/kianyari/web:latest
+          docker compose down
           
-          # Start Celery worker container
-          docker run -d --name celery-worker \
-            ghcr.io/kianyari/web:latest \
-            celery -A FD worker --loglevel=info
-          
-          # Start Celery beat container
-          docker run -d --name celery-beat \
-            ghcr.io/kianyari/web:latest \
-            celery -A FD beat --loglevel=info
+          docker compose up -d
+
