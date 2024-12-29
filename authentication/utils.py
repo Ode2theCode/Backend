@@ -13,7 +13,6 @@ def send_otp_email(email):
     otp = random.randint(100000, 999999)
     while TempUser.objects.filter(otp=otp).exists():
         otp = random.randint(100000, 999999)
-    
     temp_user = TempUser.objects.get(email=email)
     temp_user.otp = otp
     temp_user.save()

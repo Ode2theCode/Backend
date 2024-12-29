@@ -44,3 +44,11 @@ class TempUser(models.Model):
     
     def __str__(self):
         return self.username
+    
+class OTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='forget_password_otp')
+    otp = models.CharField(max_length=6)
+    date_created = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.otp

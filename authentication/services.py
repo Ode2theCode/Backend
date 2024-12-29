@@ -1,4 +1,5 @@
 from datetime import timedelta
+import random
 from django.utils import timezone
 from django.utils.encoding import smart_str, smart_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -46,11 +47,11 @@ class UserService:
         temp_user_by_username = TempUser.objects.filter(username=username).first()
         temp_user_by_email = TempUser.objects.filter(email=email).first()
 
-        if temp_user_by_username and (timezone.now() - temp_user_by_username.date_joined) > timedelta(minutes=0):
+        if temp_user_by_username and (timezone.now() - temp_user_by_username.date_joined) > timedelta(minutes=5):
             temp_user_by_username.delete()
             return
         
-        if temp_user_by_email and (timezone.now() - temp_user_by_email.date_joined) > timedelta(minutes=0):
+        if temp_user_by_email and (timezone.now() - temp_user_by_email.date_joined) > timedelta(minutes=5):
             temp_user_by_email.delete()
             return
             
@@ -76,10 +77,29 @@ class UserService:
             raise ValidationError({'detail': 'invalid one time password', 'status': status.HTTP_400_BAD_REQUEST})
         
         temp_user = TempUser.objects.get(otp=otp)
+        
+        if User.objects.filter(username=temp_user.username).exists():
+            raise ValidationError({'detail': 'user already verified', 'status': status.HTTP_400_BAD_REQUEST})
+        
         user = User.objects.create(username=temp_user.username, email=temp_user.email, password=temp_user.password)
         user.set_password(temp_user.password)
         user.save()
         temp_user.delete()
+    
+    @staticmethod
+    def resend_verification_email(email):
+        if not TempUser.objects.filter(email=email).exists():
+            raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        temp_user = TempUser.objects.get(email=email)
+        
+        if (timezone.now() - temp_user.date_joined) < timedelta(minutes=0):
+            raise ValidationError({'detail': 'Please wait for 2 minutes before requesting another OTP', 'status': status.HTTP_400_BAD_REQUEST})
+        
+        send_otp_email(temp_user.email)
+        temp_user.refresh_from_db()
+        temp_user.date_joined = timezone.now()
+        temp_user.save()
          
     @classmethod
     def check_level(cls, level):
@@ -155,34 +175,41 @@ class UserService:
         
         user = User.objects.get(email=email)
         
-        uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
-        token = PasswordResetTokenGenerator().make_token(user)
+        if (OTP.objects.filter(user=user).exists()) and (timezone.now() - OTP.objects.get(user=user).date_created) < timedelta(minutes=2):
+            raise ValidationError({'detail': 'Please wait for 2 minutes before requesting another OTP', 'status': status.HTTP_400_BAD_REQUEST})
         
-        absolute_url = f'http://localhost:5173/reset-password/{uidb64}/{token}'
+        if OTP.objects.filter(user=user).exists():
+            old_otp = OTP.objects.get(user=user)
+            old_otp.delete()
         
-        email_subject = 'Reset your password'
-        email_body = f'Click the link below to reset your password\n{absolute_url}'
-        
+        otp = random.randint(100000, 999999)
+        OTP.objects.create(user=user, otp=otp)
+        email_subject = 'Forgot Password'
+        email_body = f'Your OTP is {otp}'
+            
         email = EmailMessage(subject=email_subject, body=email_body, from_email=settings.EMAIL_HOST_USER, to=[email])
         email.send()
         
     @staticmethod
-    def confirm_reset_password(uidb64, token, new_password):
-        id = smart_str(urlsafe_base64_decode(uidb64))
+    def confirm_reset_password(otp):
+        print(otp)
+        print(OTP.objects.all())
+        if not OTP.objects.filter(otp=otp).exists():
+            raise ValidationError({'detail': 'Invalid OTP', 'status': status.HTTP_400_BAD_REQUEST})
+        if (timezone.now() - OTP.objects.get(otp=otp).date_created) > timedelta(minutes=2):
+            raise ValidationError({'detail': 'OTP has expired', 'status': status.HTTP_400_BAD_REQUEST})
         
-        if not User.objects.filter(id=id).exists():
-            raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
+        otp = OTP.objects.get(otp=otp)
+        user = otp.user
+        tokens = user.tokens()
+        otp.delete()
+        return {
+            'email': user.email,
+            'username': user.username,
+            'access_token': str(tokens['access']),
+            'refresh_token': str(tokens['refresh']),
+        }
         
-        user = User.objects.get(id=id)
-        
-        is_valid = PasswordResetTokenGenerator().check_token(user, token)        
-        if not is_valid:
-            raise ValidationError({'detail': 'The reset link is invalid', 'status': status.HTTP_400_BAD_REQUEST})
-        
-        user.set_password(new_password)
-        user.save()
-        
-        return user
     
     @classmethod
     def delete_account(cls, user):
