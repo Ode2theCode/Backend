@@ -49,12 +49,12 @@ class GroupRetrieveView(APIView):
 
 
 class GroupUpdateView(APIView):
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def patch(self, request, *args, **kwargs):
         try:
-            GroupService.update_group(kwargs.get('title'), request.data)
+            GroupService.update_group(kwargs.get('title'), request.data, request.user)
             return Response("group updated successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
@@ -65,11 +65,11 @@ class GroupUpdateView(APIView):
 
 
 class GroupDeleteView(APIView):  
-    permission_classes = [IsAuthenticated, IsGroupOwner]  
+    permission_classes = [IsAuthenticated]  
     
     def delete(self, request, *args, **kwargs):
         try:
-            GroupService.delete_group(kwargs.get('title'))
+            GroupService.delete_group(kwargs.get('title'), request.user)
             return Response("group deleted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
@@ -109,13 +109,13 @@ class GroupCancelRequestView(APIView):
   
    
 class GroupPendingRequestView(APIView):
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated]
     serializer_class = GroupPendingRequestSerializer
     pagination_class = PageNumberPagination
     
     def get(self, request, *args, **kwargs):
         try:
-            group_requests = GroupService.pending_requests(kwargs.get('title'))
+            group_requests = GroupService.pending_requests(kwargs.get('title'), request.user)
             paginator = self.pagination_class()
             paginated_data = paginator.paginate_queryset(group_requests, request)
             serializer = self.serializer_class(paginated_data, many=True)
@@ -128,14 +128,14 @@ class GroupPendingRequestView(APIView):
 
 
 class GroupAcceptRequestView(APIView):
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated]
     serializer_class = GroupAcceptRequestSerializer
     
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            GroupService.accept_request(kwargs.get('title'), serializer.validated_data['username'])
+            GroupService.accept_request(kwargs.get('title'), serializer.validated_data['username'], request.user)
             return Response("request accepted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
@@ -144,14 +144,14 @@ class GroupAcceptRequestView(APIView):
 
 
 class GroupDeclineRequestView(APIView):
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated]
     serializer_class = GroupDeclineRequestSerializer
     
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            GroupService.decline_request(kwargs.get('title'), serializer.validated_data['username'])
+            GroupService.decline_request(kwargs.get('title'), serializer.validated_data['username'], request.user)
             return Response("request declined successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
@@ -161,7 +161,7 @@ class GroupDeclineRequestView(APIView):
 
 
 class GroupLeaveView(APIView):
-    permission_classes = [IsAuthenticated, IsGroupMember]
+    permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
         try:
@@ -177,14 +177,14 @@ class GroupLeaveView(APIView):
 
 class GroupKickView(APIView):
     serializer_class = GroupKickSerializer
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated]
     
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            GroupService.kick_member(kwargs.get('title'), serializer.validated_data['username'])
+            GroupService.kick_member(kwargs.get('title'), serializer.validated_data['username'], request.user)
             return Response("user kicked successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
@@ -199,7 +199,8 @@ class GroupMemberListView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            members = GroupService.member_list(kwargs.get('title'))
+            print(request.user)
+            members = GroupService.member_list(kwargs.get('title'), request.user)
             
             paginator = self.pagination_class()
             paginator.page_size = 4
@@ -209,6 +210,6 @@ class GroupMemberListView(APIView):
             return paginator.get_paginated_response(serializer.data)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-        except Exception as e:
-            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # except Exception as e:
+        #     return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

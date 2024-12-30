@@ -1,8 +1,11 @@
 from rest_framework.permissions import BasePermission
+from groups.models import *
 
 class IsGroupOwner(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj.owner == request.user
+    def has_permission(self, request, view, obj):
+        group_title = view.kwargs.get('title')
+
+        group = Group.objects.get(title=group_title)
     
 class IsGroupMember(BasePermission):
     def has_object_permission(self, request, view, obj):
