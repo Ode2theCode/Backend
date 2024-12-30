@@ -14,7 +14,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import *
 from .services import *
 from groups.models import*
-from .permissions import *
 from .filters import *
 
 class HomeView(APIView):
@@ -137,7 +136,7 @@ class UserTimeSlotDeleteView(APIView):
 
 
 class GroupTimeSlotCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated]
     serializer_class = GroupTimeSlotSerializer
     
     def post(self, request, *args, **kwargs):
@@ -145,7 +144,8 @@ class GroupTimeSlotCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             time_slot = GroupTimeSlotService.create_group_time_slot(
-                group=Group.objects.get(title=kwargs.get('title')),
+                kwargs.get('title'),
+                request.user,
                 **serializer.validated_data
             )
             return Response(self.serializer_class(time_slot).data, status=status.HTTP_201_CREATED)
@@ -162,7 +162,7 @@ class GroupTimeSlotListView(APIView):
     
     def get(self, request, *args, **kwargs):
         try:
-            time_slots = GroupTimeSlotService.get_group_time_slots(kwargs.get('title'))
+            time_slots = GroupTimeSlotService.get_group_time_slots(kwargs.get('title'), request.user)
             serializer = self.serializer_class(time_slots, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:
@@ -172,16 +172,16 @@ class GroupTimeSlotListView(APIView):
 
 
 class GroupTimeSlotDeleteView(APIView):
-    permission_classes = [IsAuthenticated, IsGroupOwner]
+    permission_classes = [IsAuthenticated]
     
     def delete(self, request, *args, **kwargs):
         try:
-            GroupTimeSlotService.delete_time_slot(kwargs.get('title'), kwargs.get('id'))
+            GroupTimeSlotService.delete_time_slot(kwargs.get('title'), kwargs.get('id'), request.user)
             return Response("time slot deleted successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
-            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
     

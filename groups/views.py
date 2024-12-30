@@ -9,7 +9,6 @@ from rest_framework.pagination import PageNumberPagination
 from authentication.models import User
 from .serializers import *
 from .models import *
-from .permissions import *
 from .services import *
 
 

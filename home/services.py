@@ -102,8 +102,16 @@ class GroupTimeSlotService:
 
 
     @classmethod
-    def create_group_time_slot(cls, group, day_of_week: str, start_time: float, end_time: float) -> GroupTimeSlot:
+    def create_group_time_slot(cls, title, user, day_of_week: str, start_time: float, end_time: float) -> GroupTimeSlot:
+        if not Group.objects.filter(title=title).exists():
+            raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
+        if Group.objects.get(title=title).owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
+        
+        group = Group.objects.get(title=title)
+        print(group.owner)
+        print(user)
         cls.validate_time_range(start_time, end_time)
         cls.validate_overlap(group, day_of_week, start_time, end_time)
         
@@ -116,17 +124,24 @@ class GroupTimeSlotService:
 
         return time_slot
         
-    def get_group_time_slots(title) -> QuerySet[GroupTimeSlot]:
+    def get_group_time_slots(title, user) -> QuerySet[GroupTimeSlot]:
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if not Group.objects.get(title=title).members.filter(username=user.username).exists():
+            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_403_FORBIDDEN})
         
         group = Group.objects.get(title=title)
         return group.time_slots.all()
     
     @staticmethod
-    def delete_time_slot(title, time_slot_id: int) -> None:
+    def delete_time_slot(title, time_slot_id: int, user) -> None:
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if Group.objects.get(title=title).owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
+        
         group = Group.objects.get(title=title)
         if not group.time_slots.filter(id=time_slot_id).exists():
             raise ValidationError({'detail': 'Time slot not found', 'status': status.HTTP_404_NOT_FOUND})
