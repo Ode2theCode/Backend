@@ -10,6 +10,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
 import boto3
+
+from notifications.models import Notification
 from .models import *
 from .utils import send_otp_email
 from FD import settings
@@ -216,6 +218,7 @@ class UserService:
         for group in user.owned_groups.all():
             for member in group.members.all():
                 NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
+                Notification.objects.create(recipient=member, message=f"{group.title} has been deleted")
             group.delete()
             
         if user.profile_image:

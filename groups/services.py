@@ -64,17 +64,20 @@ class GroupService:
             GroupService.check_title(data.get('title'))
             for member in group.members.all():
                 NotificationConsumer.send_notification(member, f"{group.title} has been renamed to {data.get('title')}")
+                Notification.objects.create(recipient=member, message=f"{group.title} has been renamed to {data.get('title')}")
             group.title = data.get('title')
             
         if 'description' in data and data.get('description') != group.description:
             for member in group.members.all():
-                NotificationConsumer.send_notification(member, f"{member.username} updated the description of {group.title}")
+                NotificationConsumer.send_notification(member, f"{member.username} updated the noticeboard of {group.title}")
+                Notification.objects.create(recipient=member, message=f"{member.username} updated the noticeboard of {group.title}")
             group.description = data.get('description')
         
         if 'level' in data and data.get('level') != group.level:
             GroupService.check_level(data.get('level'))
             for member in group.members.all():
                 NotificationConsumer.send_notification(member, f"{group.title} level has been updated to {data.get('level')}")
+                Notification.objects.create(recipient=member, message=f"{group.title} level has been updated to {data.get('level')}")
             group.level = data.get('level')
         
         if not group.image and data.get('image'):
@@ -105,6 +108,7 @@ class GroupService:
         group = Group.objects.get(title=title)
         for member in group.members.all():
             NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
+            Notification.objects.create(recipient=member, message=f"{group.title} has been deleted")
         if group.image:
             cls.delete_s3_object(group.image.name)
 
@@ -115,6 +119,8 @@ class GroupService:
         group = Group.objects.get(title=title)
         message = ""
         group_status = ""
+        print(user.username)
+        print(group.members.all())
         
         if group.private:
             if user in group.pending_members.all():
@@ -134,6 +140,7 @@ class GroupService:
             message = f"{user.username} joined {group.title}"
             
         NotificationConsumer.send_notification(group.owner, message)
+        Notification.objects.create(recipient=group.owner, message=message)
         
         return group_status
     
@@ -163,6 +170,7 @@ class GroupService:
         group = Group.objects.get(title=title)
         group.accept_pending_member(user)
         NotificationConsumer.send_notification(user, f"your request to join {group.title} has been accepted")
+        Notification.objects.create(recipient=user, message=f"your request to join {group.title} has been accepted")
         
     @staticmethod
     def decline_request(title, username):
