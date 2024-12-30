@@ -52,4 +52,5 @@ urlpatterns = [
     path('trigger_403/', trigger_403),
     path('trigger_404/', trigger_404),
     path('trigger_500/', trigger_500),
+
 ]
