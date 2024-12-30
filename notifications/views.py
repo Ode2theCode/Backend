@@ -12,7 +12,6 @@ class AllNotificationsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
     pagination_class = PageNumberPagination
-    ordering = ['-created_at']
     def get(self, request):
         try:
             result = NotificationService.get_notifications(request.user)

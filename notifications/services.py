@@ -4,4 +4,5 @@ from .models import Notification
 class NotificationService:
     @staticmethod
     def get_notifications(user):
-        return Notification.objects.filter(recipient=user)
+        result = Notification.objects.filter(recipient=user)
+        return result[::-1]
