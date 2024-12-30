@@ -139,10 +139,9 @@ class ChangePasswordView(APIView):
             username = request.user.username
             user = User.objects.get(username=username)
             
-            old_password = serializer.validated_data.get('old_password')
             new_password = serializer.validated_data.get('new_password')
             
-            UserService.change_password(user, old_password, new_password)
+            UserService.change_password(user, new_password)
             return Response("password changed successfully", status=status.HTTP_200_OK)
         
         except ValidationError as e:

@@ -53,8 +53,7 @@ class UserDeleteSerializer(serializers.ModelSerializer):
         
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(min_length=8, max_length=64, write_only=True)
     new_password = serializers.CharField(min_length=8, max_length=64, write_only=True)
     class Meta:
         model = User
-        fields = ['old_password', 'new_password']
+        fields = ['new_password']
