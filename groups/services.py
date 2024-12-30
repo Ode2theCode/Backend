@@ -46,19 +46,25 @@ class GroupService:
         return group
 
     @staticmethod
-    def retrieve_group(title):
+    def retrieve_group(title, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if not Group.objects.get(title=title).members.filter(username=user.username).exists():
+            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_403_FORBIDDEN})
 
         group = Group.objects.get(title=title)
         return group
     
     @staticmethod
-    def update_group(title, data):
+    def update_group(title, data, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
-        group = Group.objects.get(title=title)      
+        group = Group.objects.get(title=title)
+        
+        if group.owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
         
         if 'title' in data and data.get('title') != group.title:
             GroupService.check_title(data.get('title'))
@@ -102,10 +108,14 @@ class GroupService:
         group.save()
     
     @classmethod
-    def delete_group(cls, title):
+    def delete_group(cls, title, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         group = Group.objects.get(title=title)
+        
+        if group.owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
+        
         for member in group.members.all():
             NotificationConsumer.send_notification(member, f"{group.title} has been deleted")
             Notification.objects.create(recipient=member, message=f"{group.title} has been deleted")
@@ -119,8 +129,6 @@ class GroupService:
         group = Group.objects.get(title=title)
         message = ""
         group_status = ""
-        print(user.username)
-        print(group.members.all())
         
         if group.private:
             if user in group.pending_members.all():
@@ -152,35 +160,63 @@ class GroupService:
         group.pending_members.remove(user)
     
     @staticmethod
-    def pending_requests(title):
+    def pending_requests(title, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         group = Group.objects.get(title=title)
+        
+        if group.owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
+        
         return group.pending_members.all()
     
     @staticmethod
-    def accept_request(title, username):
+    def accept_request(title, username, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if Group.objects.get(title=title).owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
+        
         if not User.objects.filter(username=username).exists():
             raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
         
+        if User.objects.get(username=username) not in Group.objects.get(title=title).pending_members.all():
+            raise ValidationError({'detail': 'This user has not sent a request to join this group', 'status': status.HTTP_400_BAD_REQUEST})
+        
+        if User.objects.get(username=username) in Group.objects.get(title=title).members.all():
+            raise ValidationError({'detail': 'This user is already a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
+        
         user = User.objects.get(username=username)
         group = Group.objects.get(title=title)
+        
+        
         group.accept_pending_member(user)
         NotificationConsumer.send_notification(user, f"your request to join {group.title} has been accepted")
         Notification.objects.create(recipient=user, message=f"your request to join {group.title} has been accepted")
         
     @staticmethod
-    def decline_request(title, username):
+    def decline_request(title, username, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if Group.objects.get(title=title).owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
+        
         if not User.objects.filter(username=username).exists():
             raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
         
+        if User.objects.get(username=username) not in Group.objects.get(title=title).pending_members.all():
+            raise ValidationError({'detail': 'This user has not sent a request to join this group', 'status': status.HTTP_400_BAD_REQUEST})
+        
+        if User.objects.get(username=username) in Group.objects.get(title=title).members.all():
+            raise ValidationError({'detail': 'This user is already a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
+        
         user = User.objects.get(username=username)
         group = Group.objects.get(title=title)
+        
+        
         group.decline_pending_member(user)
     
     @staticmethod
@@ -189,21 +225,26 @@ class GroupService:
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         group = Group.objects.get(title=title)
+        
+        if not group.members.filter(username=user.username).exists():
+            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
+        
         if group.owner == user:
             raise ValidationError({'detail': 'You cannot leave your own group', 'status': status.HTTP_400_BAD_REQUEST})
         
 
-        if not group.members.filter(username=user.username).exists():
-            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
         group.remove_member(user)
         
 
         group.save()
     
     @staticmethod
-    def kick_member(title, username):
+    def kick_member(title, username, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if Group.objects.get(title=title).owner != user:
+            raise ValidationError({'detail': 'You are not the owner of this group', 'status': status.HTTP_403_FORBIDDEN})
         
         if not User.objects.filter(username=username).exists():
             raise ValidationError({'detail': 'User not found', 'status': status.HTTP_404_NOT_FOUND})
@@ -214,16 +255,21 @@ class GroupService:
         user = User.objects.get(username=username)
         
         group = Group.objects.get(title=title)
+        
         if not group.members.filter(username=user.username).exists():
             raise ValidationError({'detail': 'this user is not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
         group.remove_member(user)
         group.save()
         
     @staticmethod
-    def member_list(title):
+    def member_list(title, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
         
         group = Group.objects.get(title=title)
+        
+        if not group.members.filter(username=user.username).exists():
+            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_403_FORBIDDEN})
+        
         return group.members.all()
     
