@@ -26,5 +26,17 @@ class AllNotificationsView(APIView):
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
         except Exception as e:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class DeleteNotificationView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def delete(self, request):
+        try:
+            response = NotificationService.delete_notification(request.user, request.data.get('notification_id'))
+            return Response("Notification deleted successfully", status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.detail.get('detail'), status=e.detail.get('status'))
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
