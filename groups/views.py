@@ -33,11 +33,12 @@ class GroupCreateView(APIView):
         
 
 class GroupRetrieveView(APIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = GroupRetrieveSerializer
     
     def get(self, request, *args, **kwargs):
         try:
-            group = GroupService.retrieve_group(kwargs.get('title'))
+            group = GroupService.retrieve_group(kwargs.get('title'), request.user)
             serializer = self.serializer_class(group)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except ValidationError as e:

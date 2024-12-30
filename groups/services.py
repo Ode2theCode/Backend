@@ -46,9 +46,12 @@ class GroupService:
         return group
 
     @staticmethod
-    def retrieve_group(title):
+    def retrieve_group(title, user):
         if not Group.objects.filter(title=title).exists():
             raise ValidationError({'detail': 'Group not found', 'status': status.HTTP_404_NOT_FOUND})
+        
+        if not Group.objects.get(title=title).members.filter(username=user.username).exists():
+            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_403_FORBIDDEN})
 
         group = Group.objects.get(title=title)
         return group
@@ -266,7 +269,7 @@ class GroupService:
         group = Group.objects.get(title=title)
         
         if not group.members.filter(username=user.username).exists():
-            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_400_BAD_REQUEST})
+            raise ValidationError({'detail': 'You are not a member of this group', 'status': status.HTTP_403_FORBIDDEN})
         
         return group.members.all()
     
