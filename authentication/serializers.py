@@ -36,12 +36,7 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email']
 
-        
-class PasswordResetConfirmSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(min_length=8, max_length=64, write_only=True)
-    class Meta:
-        model = User
-        fields = ['password']       
+              
     
 
 class UserRetriveSerializer(serializers.ModelSerializer):
