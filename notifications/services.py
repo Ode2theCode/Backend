@@ -13,3 +13,6 @@ class NotificationService:
             notification.delete()
         except Notification.DoesNotExist:
             raise ValidationError({'detail': 'Notification not found', 'status': 404})
+        
+    def delete_all_notifications(user):
+        Notification.objects.filter(recipient=user).delete()
