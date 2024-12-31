@@ -81,8 +81,8 @@ class PasswordResetRequestView(APIView):
             return Response("password reset link sent successfully", status=status.HTTP_200_OK)
         except ValidationError as e:
             return Response(e.detail.get('detail'), status=e.detail.get('status'))
-        # except Exception as e:
-        #     return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
    
  
