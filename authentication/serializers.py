@@ -16,6 +16,12 @@ class VerifyEmailSerializer(serializers.Serializer):
     class Meta:
         model = TempUser
         fields = ['otp']
+        
+class ResendVerificationEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    class Meta:
+        model = TempUser
+        fields = ['email']
     
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -30,13 +36,16 @@ class UserLoginSerializer(serializers.ModelSerializer):
 class UserLogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField()
         
+
 class PasswordResetRequestSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     class Meta:
         model = User
         fields = ['email']
 
-              
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    otp = serializers.CharField(max_length=6)
     
 
 class UserRetriveSerializer(serializers.ModelSerializer):

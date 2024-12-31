@@ -43,7 +43,7 @@ class VerifyEmailView(APIView):
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class ResendVerificationEmailView(APIView):
-    
+    serializer_class = ResendVerificationEmailSerializer
     def post(self, request):
         try:
             UserService.resend_verification_email(request.data['email'])
@@ -87,7 +87,7 @@ class PasswordResetRequestView(APIView):
    
  
 class PasswordResetConfirmView(APIView):
-    
+    serializer_class = PasswordResetConfirmSerializer
     def post(self, request):
         try:
             tokens = UserService.confirm_reset_password(request.data['otp'])
