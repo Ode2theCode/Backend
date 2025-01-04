@@ -35,10 +35,11 @@ class GroupService:
         
     def check_level(level):
         if level not in GroupService.VALID_LEVELS:
-            raise ValidationError({'detail': f'Invalid level. Please select one of the following: {", ".join(Group.VALID_LEVELS)}', 'status': status.HTTP_400_BAD_REQUEST})
+            raise ValidationError({'detail': f'Invalid level. Please select one of the following: {", ".join(GroupService.VALID_LEVELS)}', 'status': status.HTTP_400_BAD_REQUEST})
     
     @classmethod
     def create_group(cls, user, data):        
+        cls.check_level(data.get('level'))
         cls.check_title(data.get('title'))
         group = Group.objects.create(owner=user, **data)
         Chat.objects.create(group=group)
