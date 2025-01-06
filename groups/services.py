@@ -91,7 +91,7 @@ class GroupService:
             path = data.get('image').name + f'_{group.id}'
             group.image.save(path, data.get('image'))
         
-        if group.image and not data.get('image'):
+        if group.image and data.get('image') == '':
             GroupService.delete_s3_object(group.image.name)
             group.image = None
         

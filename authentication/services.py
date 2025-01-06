@@ -123,7 +123,7 @@ class UserService:
             path = data.get('profile_image').name + f'_{user.id}'
             user.profile_image.save(path, data.get('profile_image'))
         
-        if user.profile_image and not data.get('profile_image'):
+        if user.profile_image and data.get('profile_image') == '':
             cls.delete_s3_object(user.profile_image.name)
             user.profile_image = None
         
