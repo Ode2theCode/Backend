@@ -184,7 +184,7 @@ class SuggestionService:
         user_time_slots = UserTimeSlotService.get_user_time_slots(user)
         groups = Group.objects.filter(level__in=levels_to_consider)\
             .exclude(id__in=[group.id for group in user.groups.all()])\
-            .order_by('?')[:100].annotate(
+            .annotate(
                 total_overlap=Coalesce(
                     Sum(
                         ExpressionWrapper(
