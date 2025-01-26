@@ -20,7 +20,8 @@ class HomeView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = HomeSerializer
     pagination_class = PageNumberPagination
-    filter_backends = [SearchFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = GroupFilter
     search_fields = ['title']
     ordering_fields = ['title', 'level', 'member_count']
     
