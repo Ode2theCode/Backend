@@ -20,8 +20,9 @@ class HomeView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = HomeSerializer
     pagination_class = PageNumberPagination
-    filter_backends = [SearchFilter]
+    filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['title']
+    ordering_fields = ['title', 'level', 'member_count']
     
     def get(self, request):
         try:
@@ -46,17 +47,25 @@ class SuggestionsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = SuggestionSerializer
     pagination_class = PageNumberPagination
+    filter_backends = [OrderingFilter]
+    ordering_fields = ['title']
     
     def get(self, request):
         try:
             suggestions = SuggestionService.get_suggestions(request.user)
+            filtered_suggestions = self.filter_queryset(suggestions)
             paginator = self.pagination_class()
             paginator.page_size = 4
-            paginated_data = paginator.paginate_queryset(suggestions, request)
+            paginated_data = paginator.paginate_queryset(filtered_suggestions, request)
             serializer = self.serializer_class(paginated_data, many=True, context={'request': request})
             return paginator.get_paginated_response(serializer.data)
         except Exception:
             return Response("something went wrong. Please try again", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def filter_queryset(self, queryset):
+        for backend in list(self.filter_backends):
+            queryset = backend().filter_queryset(self.request, queryset, self)
+        return queryset
 
 class AllGroupsView(APIView):
 
@@ -66,7 +75,7 @@ class AllGroupsView(APIView):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = GroupFilter
     search_fields = ['title']
-    ordering_fields = ['level', 'member_count']
+    ordering_fields = ['title', 'level', 'member_count']
     
     def get(self, request):
         try:
