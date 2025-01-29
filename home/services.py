@@ -172,6 +172,7 @@ class SuggestionService:
             group_ids = [int(group_id) for group_id in group_ids]
             groups = Group.objects.filter(id__in=group_ids)
             return groups
+        
         VALID_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
         user_level = user.level.upper()
         level_index = VALID_LEVELS.index(user_level)
@@ -182,9 +183,12 @@ class SuggestionService:
             levels_to_consider.append(VALID_LEVELS[level_index + 1])
         
         user_time_slots = UserTimeSlotService.get_user_time_slots(user)
+        user_group_ids = list(user.joined_groups.values_list('id', flat=True))
+        
+        
         groups = Group.objects.filter(level__in=levels_to_consider)\
-            .exclude(id__in=[group.id for group in user.groups.all()])\
-            .order_by('?')[:100].annotate(
+            .exclude(id__in=user_group_ids)\
+            .annotate(
                 total_overlap=Coalesce(
                     Sum(
                         ExpressionWrapper(
@@ -202,10 +206,9 @@ class SuggestionService:
                         )
                     ),
                     Value(0.0),
-                    output_field=FloatField()
                 )
             )
-
+        
         if user.neighborhood:
             groups = groups.annotate(
                 total_overlap=ExpressionWrapper(

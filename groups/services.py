@@ -35,10 +35,11 @@ class GroupService:
         
     def check_level(level):
         if level not in GroupService.VALID_LEVELS:
-            raise ValidationError({'detail': f'Invalid level. Please select one of the following: {", ".join(Group.VALID_LEVELS)}', 'status': status.HTTP_400_BAD_REQUEST})
+            raise ValidationError({'detail': f'Invalid level. Please select one of the following: {", ".join(GroupService.VALID_LEVELS)}', 'status': status.HTTP_400_BAD_REQUEST})
     
     @classmethod
     def create_group(cls, user, data):        
+        cls.check_level(data.get('level'))
         cls.check_title(data.get('title'))
         group = Group.objects.create(owner=user, **data)
         Chat.objects.create(group=group)
@@ -90,7 +91,7 @@ class GroupService:
             path = data.get('image').name + f'_{group.id}'
             group.image.save(path, data.get('image'))
         
-        if group.image and not data.get('image'):
+        if group.image and data.get('image') == '':
             GroupService.delete_s3_object(group.image.name)
             group.image = None
         
